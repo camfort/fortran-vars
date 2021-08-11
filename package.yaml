@@ -1,0 +1,51 @@
+name: fortran-vars
+version: 0.1.0
+synopsis: TODO short
+description: TODO long
+category: Language
+github: camfort/fortran-vars
+license: Apache-2.0
+maintainer: thefirstmuffinman@gmail.com
+
+extra-source-files:
+- README.md
+- CHANGELOG.md
+
+dependencies:
+- base >= 4.7 && <5
+- fortran-src >= 0.5.0
+- text >= 1.2.2.2
+- bytestring >= 0.10.8.1
+- containers >= 0.5.7.1
+- uniplate >= 1.6.10
+- aeson >=1.2.3.0
+- fgl >= 5
+- deepseq >= 1.4.4.0
+- fortran-src-extras >= 0.2.0
+
+library:
+  source-dirs: src
+
+executables:
+  fortran-vars:
+    source-dirs: app
+    main: Main.hs
+    dependencies:
+    - fortran-vars
+    ghc-options:
+    - -threaded
+    - -rtsopts
+
+tests:
+  spec:
+    main: Spec.hs
+    source-dirs: test
+    build-tools:
+    - hspec-discover
+    dependencies:
+    - fortran-vars
+    - hspec
+    - HUnit
+    ghc-options:
+    - -threaded
+    - -rtsopts
