@@ -6,8 +6,8 @@ cabal-version: 1.12
 
 name:           fortran-vars
 version:        0.1.0
-synopsis:       TODO short
-description:    TODO long
+synopsis:       Fortran memory model and other static analysis tools.
+description:    Various Fortran static analysis tools focusing on a memory model for Fortran types. Uses fortran-src for the syntax representation.
 category:       Language
 homepage:       https://github.com/camfort/fortran-vars#readme
 bug-reports:    https://github.com/camfort/fortran-vars/issues
@@ -60,7 +60,7 @@ library
     , containers >=0.5.7.1
     , deepseq >=1.4.4.0
     , fgl >=5
-    , fortran-src >=0.5.0
+    , fortran-src >=0.5.0 && <0.6.0
     , fortran-src-extras >=0.2.0
     , text >=1.2.2.2
     , uniplate >=1.6.10
@@ -80,7 +80,7 @@ executable fortran-vars
     , containers >=0.5.7.1
     , deepseq >=1.4.4.0
     , fgl >=5
-    , fortran-src >=0.5.0
+    , fortran-src >=0.5.0 && <0.6.0
     , fortran-src-extras >=0.2.0
     , fortran-vars
     , text >=1.2.2.2
@@ -114,7 +114,7 @@ test-suite spec
     , containers >=0.5.7.1
     , deepseq >=1.4.4.0
     , fgl >=5
-    , fortran-src >=0.5.0
+    , fortran-src >=0.5.0 && <0.6.0
     , fortran-src-extras >=0.2.0
     , fortran-vars
     , hspec

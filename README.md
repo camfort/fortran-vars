@@ -1,6 +1,6 @@
 # fortran-vars
 
-`fortran-vars` is a static analysis and source rewriting library for Fortran code. It is built on top of the open source project [`fortran-src`](https://github.com/camfort/fortran-src) which provides lexing, parsing and basic analyses of Fortran code. `fortran-vars` focuses on supporting the Fortran 77 standard and extensions. It provides a Fortran memory model with a symbol table and storage table, constant expressions evaluation, constant propagation analysis, and source code rewriting.
+`fortran-vars` is a static analysis library for Fortran code. It is built on top of the open source project [`fortran-src`](https://github.com/camfort/fortran-src) which provides lexing, parsing and basic analyses of Fortran code. `fortran-vars` focuses on supporting the Fortran 77 standard and extensions. It provides a Fortran memory model with a symbol table and storage table, constant expressions evaluation, constant propagation analysis
 
 ## Fortran Memory Model
 `fortran-vars` provides a memory model that specifies the allocation arrangement of variables and arrays.
@@ -37,19 +37,17 @@ The three kinds of values form a three-level lattice with `Top` being the highes
 
 Variables and array elements are resolved to range of memory by referencing the symbol table and storage table, therefore the states of the constant propagation are represented by mapping from memory ranges to three-level lattice values.
 
-## Source Code Rewriting
-The `Rewriter` module provides a layout preserving refactoring tool. Unlike a pretty printer, the rewriter preserves white spaces and comments and only makes source code change at specified range of text. It handles line continuations automatically if the rewriting exceeds the column width limit.
-
 ## Usage
 `fortran-vars` is mainly designed as a library of static analysis and refactoring of Fortran code. It also comes with a
 command-line tool that dumps the symbol table and storage table of the input program in JSON format.
+
 ```
  fortran-vars (-v|--fortranVersion VERSION) [-I|--include DIRECTORY] FILE
-
 ```
 
 ## Build
 `fortran-vars` uses [`stack`](https://docs.haskellstack.org) for development. To build and test, run:
+
 ```
 stack build
 stack test
