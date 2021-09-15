@@ -1,5 +1,4 @@
 # fortran-vars
-
 `fortran-vars` is a static analysis library for Fortran code. It is built on top of the open source project [`fortran-src`](https://github.com/camfort/fortran-src) which provides lexing, parsing and basic analyses of Fortran code. `fortran-vars` focuses on supporting the Fortran 77 standard and extensions. It provides a Fortran memory model with a symbol table and storage table, constant expressions evaluation, constant propagation analysis
 
 ## Fortran Memory Model
@@ -42,7 +41,7 @@ Variables and array elements are resolved to range of memory by referencing the 
 command-line tool that dumps the symbol table and storage table of the input program in JSON format.
 
 ```
- fortran-vars (-v|--fortranVersion VERSION) [-I|--include DIRECTORY] FILE
+fortran-vars (-v|--fortranVersion VERSION) [-I|--include DIRECTORY] FILE
 ```
 
 ## Build
@@ -52,3 +51,30 @@ command-line tool that dumps the symbol table and storage table of the input pro
 stack build
 stack test
 ```
+
+Alternatively, you can use Cabal:
+
+```
+cabal build
+cabal test
+```
+
+## Contributors
+Thanks to the original package authors:
+
+  * Aiden Jeffrey <ajeffrey15@bloomberg.net>
+  * Anthony Burzillo <aburzillo@bloomberg.net>
+  * Azeem Bande-ali <abandeali@bloomberg.net>
+  * Benjamin Groh <bgroh2@bloomberg.net>
+  * Chris Cotter <ccotter14@bloomberg.net>
+  * Daniel Beer <dbeer1@bloomberg.net>
+  * Darius Makovsky <bapophis@bloomberg.net>
+  * Eric Schneider <eschneider47@bloomberg.net>
+  * Eric Seidel <eseidel13@bloomberg.net>
+  * Jason Xu <jxu116@bloomberg.net>
+  * Kojo Adams <kadams85@bloomberg.net>
+  * Lukasz Kolodziejczyk <lkolodziejc1@bloomberg.net>
+  * Mario Longobardi <mlongobardi2@bloomberg.net>
+  * Poppy Singleton-Hoare <psingletonho@bloomberg.net>
+  * Raoul Hidalgo Charman <rhidalgochar@bloomberg.net>
+  * Ti Liang <tliang54@bloomberg.net>
