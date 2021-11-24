@@ -22,6 +22,7 @@ import           Language.Fortran.AST           ( AList(..)
                                                 , Name
                                                 , ProgramUnit
                                                 , Statement(..)
+                                                , Declarator(..)
                                                 )
 
 import           Language.Fortran.Vars.MemoryLocation
@@ -97,16 +98,16 @@ processCommon
 processCommon pu puModel =
   let commonGrps =
           [ commGrps | (StCommon _ _ (AList _ _ commGrps)) <- allPUS pu ]
-      mergeCommonVariables mapping (CommonGroup _ _ commName varList) =
+      mergeCommonVariables mapping (CommonGroup _ _ commName decls) =
           let commonName = case commName of
                 Just e  -> "/" ++ srcName e ++ "/"
                 Nothing -> "*blank_common*"
-              vars          = aStrip varList
-              precedingVars = fromMaybe [] (M.lookup commonName mapping)
-          in  M.insert commonName (precedingVars ++ vars) mapping
+              precedingDecls = fromMaybe [] (M.lookup commonName mapping)
+          in  M.insert commonName (precedingDecls ++ aStrip decls) mapping
       commons = foldl' mergeCommonVariables M.empty (concat commonGrps)
-      processComm commonName varExps (symTable, mbs) =
-          let varLocations       = map (getStartLocation symTable) varExps
+      processComm commonName varDecls (symTable, mbs) =
+          let varExps            = map declExpr varDecls
+              varLocations       = map (getStartLocation symTable) varExps
               varSizes           = map (getSize symTable) varExps
               varAccumSizes      = scanl1 (+) varSizes
               commBlockLocations = map (commonName, ) (0 : varAccumSizes)
@@ -120,4 +121,6 @@ processCommon pu puModel =
                   in  M.insert commonName newBlock mbs
               f model (l1, l2) = let (model', _) = union model l1 l2 in model'
           in  foldl' f (symTable, mbs') (zip commBlockLocations varLocations)
+      declExpr (DeclVariable _ _ e _ _)   = e
+      declExpr (DeclArray    _ _ e _ _ _) = e
   in  M.foldrWithKey processComm puModel commons

@@ -1,3 +1,5 @@
+{-# LANGUAGE LambdaCase #-}
+
 module Language.Fortran.Vars.SymbolTable
   ( collectSymbols
   )
@@ -8,6 +10,8 @@ import           Data.Data                      ( Data
                                                 )
 import           Data.List                      ( foldl' )
 import qualified Data.Map                      as M
+import           Data.Maybe                     ( catMaybes )
+
 import           Language.Fortran.Analysis      ( Analysis
                                                 , srcName
                                                 )
@@ -78,30 +82,6 @@ resolveDimensionDimensionDeclarator symTable (DimensionDeclarator _ _ lowerbound
     Right (Int i) -> Just i
     _             -> Nothing
   valueOf Nothing = Just 1
-
--- | Given a 'SymbolTable' and an 'Index', return a pair of
--- resolved 'DynamicDimensionElement's representing lower- and upper- bound
-resolveDimensionExpSubscript
-  :: SymbolTable -> Index (Analysis a) -> Maybe (Int, Int)
-resolveDimensionExpSubscript symTable index = case index of
-  IxSingle _ _ _ upperbound -> do
-    ub <- valueOf upperbound
-    pure (1, ub)
-  IxRange _ _ lowerbound upperbound _ -> do
-    lb <- lowerbound >>= valueOf
-    ub <- upperbound >>= valueOf
-    pure (lb, ub)
- where
-  valueOf expr = case eval' symTable expr of
-    Right (Int i) -> Just i
-    _             -> Nothing
-
--- | Given a 'SymbolTable' and an 'Argument', return a maybe pair of Ints
--- representing lower- and upper- bound
-resolveDimensionExpFunctionCall
-  :: SymbolTable -> Argument (Analysis a) -> Maybe (Int, Int)
-resolveDimensionExpFunctionCall symTable (Argument _ _ _ upperbound) =
-  let ub = toInt (eval symTable upperbound) in Just (1, ub)
 
 -- Parameter declarations
 -- A parameter may or may not have a type declaration. If it does have one,
@@ -227,126 +207,85 @@ handleDeclaration symTable typespec decls = foldl' f symTable (aStrip decls)
     in
       M.insert symbol entry symt
 
-updateDimensionDimensionDeclarator
+-- | Handle an array 'Declarator'.
+--
+-- 'Declarator's are the RHS of a declaration statement, and also used in COMMON
+-- block definitions. They store the variable name, and array type info.
+-- Importantly, they don't store any scalar info (only bring the variable into
+-- scope). So we only handle array 'Declarator's.
+--
+-- If the array 'Declarator' is for a variable not (yet) in the given
+-- 'SymbolTable', it's given a placeholder scalar type. This is apparently
+-- inconsistent with how DIMENSION statements are handled, where such cases are
+-- skipped.
+handleArrayDecl
+  :: Data a
+  => SymbolTable -> Expression (Analysis a) -> [DimensionDeclarator (Analysis a)]
+  -> SymbolTable
+handleArrayDecl symTable varExp dimDecls =
+    let symbol = srcName varExp
+        dims   = traverse (resolveDimensionDimensionDeclarator symTable) dimDecls
+     in case M.lookup symbol symTable of
+          Just (SVariable TArray{} _) -> error "invalid declarator: duplicate array declarations"
+          Just (SVariable ty loc) ->
+            let ste = SVariable (TArray ty dims) loc
+             in M.insert symbol ste symTable
+          Nothing -> -- add array info, use a placeholder for scalar type
+            let ste = SVariable (TArray placeholderIntrinsicType dims) (symbol, 0)
+             in M.insert symbol ste symTable
+  where placeholderIntrinsicType = TInteger 4
+
+-- | Given a 'SymbolTable' and a 'Statement' found in a 'ProgramUnit', return a new 'SymbolTable'
+-- with any newly defined symbols
+stSymbols :: Data a => SymbolTable -> Statement (Analysis a) -> SymbolTable
+stSymbols symTable = \case
+  StParameter _ _ alist        -> handleParameter symTable alist
+  StDeclaration _ _ ts _ decls -> handleDeclaration symTable ts decls
+  StDimension _ _ decls        -> foldl' handleDimension symTable (aStrip decls)
+  StCommon    _ _ cmns         -> foldl' handleCommon symTable (aStrip cmns)
+  StInclude _ _ _ (Just bls)   -> foldl' blSymbols symTable bls
+  _                            -> symTable
+ where
+  handleDimension symt = \case
+    DeclArray _ _ varExp dimDecls _ _ ->
+      upgradeScalarToArray (srcName varExp) dimDecls symt
+    -- DIMENSION statements only permit 'DeclArray's, so this is impossible in a
+    -- correct parser.
+    DeclVariable{} -> error "non-array declaration in a DIMENSION statement"
+  handleCommon symt (CommonGroup _ _ mName decls) =
+    let arrayDecls = catMaybes . map extractArrayDecl . aStrip $ decls
+     in foldl' (uncurry . handleArrayDecl) symt arrayDecls
+  extractArrayDecl = \case
+    DeclArray _ _ v d _ _ -> Just (v, aStrip d)
+    DeclVariable{}        -> Nothing
+
+-- | Try to upgrade an existing scalar variable to an array variable.
+--
+-- Returns the unchanged 'SymbolTable' if the variable didn't exist. If the
+-- variable was already an array type, runtime error.
+--
+-- The DIMENSION statement defines array metadata for a variable. Due to
+-- Fortran syntax, a variable's the full type isn't known until the executable
+-- statements begin, and you may define array and scalar info in either order
+-- e.g. `INTEGER x; DIMENSION x(2)` or `DIMENSION x(2); INTEGER x`. This
+-- function handles just the former case. (Ideally we handle both
+-- interchangeably, but the fortran-vars type representation isn't conducive.)
+upgradeScalarToArray
   :: Name
   -> AList DimensionDeclarator (Analysis a)
   -> SymbolTable
   -> SymbolTable
-updateDimensionDimensionDeclarator symbol dimDecls symTable =
+upgradeScalarToArray symbol dimDecls symTable =
   case M.lookup symbol symTable of
-    Just (SVariable TArray{} _) -> error
-      (symbol
-      ++ "is array-typed Varible. \
-                 \Invalid fortran syntax (Duplicate DIMENSION attribute)"
-      )
+    Just (SVariable TArray{} _) ->
+      error $  symbol <> " is array-typed variable."
+            <> " Invalid fortran syntax (Duplicate DIMENSION attribute)"
     Just (SVariable ty loc) ->
       let mdims = traverse (resolveDimensionDimensionDeclarator symTable)
                            (aStrip dimDecls)
           entry = SVariable (TArray ty mdims) loc
       in  M.insert symbol entry symTable
     _ -> symTable
-
-handleDimension
-  :: Data a => SymbolTable -> AList Declarator (Analysis a) -> SymbolTable
-handleDimension symTable decls = foldl' f symTable (aStrip decls)
- where
-  f symt (DeclArray _ _ varExp dimDecls _ _) =
-    updateDimensionDimensionDeclarator (srcName varExp) dimDecls symt
-  f symt _ = symt
-
--- | Given symbol, list of Arguments and SymbolTable, it updates the relevant
--- variable in the SymbolTable to become an array with dimensions described by
--- the list of Arguments.
---
--- This function is needed to handle dimensions specifications within COMMONs,
--- because fortran-src doesn't support 'DimensionDeclarator's within COMMON blocks.
-updateDimensionExpFunctionCall
-  :: Name -> AList Argument (Analysis a) -> SymbolTable -> SymbolTable
-updateDimensionExpFunctionCall symbol args symTable =
-  case M.lookup symbol symTable of
-    Just (SVariable TArray{} _) -> error
-      (symbol
-      ++ " is array-typed VaribleEntry. \
-                 \Invalid fortran syntax (Duplicate DIMENSION attribute)"
-      )
-    Just (SVariable std loc) ->
-      let dims =
-              traverse (resolveDimensionExpFunctionCall symTable) (aStrip args)
-          entry = SVariable (TArray std dims) loc
-      in  M.insert symbol entry symTable
-    Just (SDummy _) -> error
-      (symbol
-      ++ " is DummyVariableEntry. \
-                 \Invalid fortran syntax (Dummy in COMMON dimension declaration)"
-      )
-    Nothing ->
-      let dims =
-              traverse (resolveDimensionExpFunctionCall symTable) (aStrip args)
-          -- Set default kind; there is no way to know it at this point
-          entry = SVariable (TArray (TInteger 4) dims) (symbol, 0)
-      in  M.insert symbol entry symTable
-    _ -> error
-      (symbol
-      ++ " was found in SymbolTable. This case is not possible, \
-                 \because ExpFunctionCall as dimension declarator can only occur for \
-                 \variables that occur after COMMON block in the code"
-      )
-
--- | Given symbol, list of Indices and SymbolTable, it updates the relevant
--- variable in the SymbolTable to become an array with dimensions described by
--- the list of Indices.
---
--- This function is needed to handle dimensions specifications within COMMONs,
--- because fortran-src doesn't support 'DimensionDeclarator's within COMMON blocks.
-updateDimensionExpSubscript
-  :: Name -> AList Index (Analysis a) -> SymbolTable -> SymbolTable
-updateDimensionExpSubscript symbol indices symTable =
-  case M.lookup symbol symTable of
-    Just (SVariable TArray{} _) -> error
-      (symbol
-      ++ " is array-typed VaribleEntry. \
-                 \Invalid fortran syntax (Duplicate DIMENSION attribute)"
-      )
-    Just (SVariable std loc) ->
-      let dims =
-              traverse (resolveDimensionExpSubscript symTable) (aStrip indices)
-          entry = SVariable (TArray std dims) loc
-      in  M.insert symbol entry symTable
-    Just (SDummy _) -> error
-      (symbol
-      ++ " is DummyVariableEntry. \
-                 \Invalid fortran syntax (Dummy in COMMON dimension declaration)"
-      )
-    Nothing ->
-      let dims =
-              traverse (resolveDimensionExpSubscript symTable) (aStrip indices)
-          -- Set default kind; there is no way to know it at this point
-          entry = SVariable (TArray (TInteger 4) dims) (symbol, 0)
-      in  M.insert symbol entry symTable
-    _ -> error "Invalid fortran syntax"
-
-handleCommon
-  :: Data a => SymbolTable -> AList CommonGroup (Analysis a) -> SymbolTable
-handleCommon symTable alist = foldl' f symTable (aStrip alist)
- where
-  f symt (CommonGroup _ _ _ alist2) = foldl' f2 symt (aStrip alist2)
-   where
-    f2 symt2 (ExpFunctionCall _ _ varExp (Just alist3)) =
-      updateDimensionExpFunctionCall (srcName varExp) alist3 symt2
-    f2 symt2 (ExpSubscript _ _ varExp alist3) =
-      updateDimensionExpSubscript (srcName varExp) alist3 symt2
-    f2 symt2 _ = symt2
-
--- | Given a 'SymbolTable' and a 'Statement' found in a 'ProgramUnit', return a new 'SymbolTable'
--- with any newly defined symbols
-stSymbols :: Data a => SymbolTable -> Statement (Analysis a) -> SymbolTable
-stSymbols symTable (StParameter _ _ alist) = handleParameter symTable alist
-stSymbols symTable (StDeclaration _ _ typespec _ decls) =
-  handleDeclaration symTable typespec decls
-stSymbols symTable (StDimension _ _ decls     ) = handleDimension symTable decls
-stSymbols symTable (StCommon    _ _ alist     ) = handleCommon symTable alist
-stSymbols symTable (StInclude _ _ _ (Just bls)) = foldl' blSymbols symTable bls
-stSymbols symTable _                            = symTable
 
 -- | Given a 'Bool', 'SymbolTable' and a 'ProgramUnit', return an updated
 -- 'SymbolTable' containing symbols defined in 'ProgramUnit' signature, e.g.
