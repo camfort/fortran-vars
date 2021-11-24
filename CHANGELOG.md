@@ -1,3 +1,9 @@
+## 0.2.0 (24 Nov 2021)
+  * Update to fortran-src 0.6.0
+  * Gather type info from COMMON blocks better (as they now support dimension
+    declarators) #1
+  * Fix some disabled tests #1
+
 ## 0.1.0 (6 Sep 2021)
 Initial release.
 
