@@ -93,9 +93,6 @@ spec = do
         ]
 
     it "structures and subscripts" $ do
-      pending
-    {- TODO: 2021-09-06: fails with fortran-src ErrorCall: Use of varName on
-        non-variable
       pf <- getTestProgramAnalysis "test/structure_table/structure4.f"
       let pus         = allPU pf
           sts         = map collectSymbols pus
@@ -120,7 +117,6 @@ spec = do
             ]
           )
         ]
-      -}
 
 
   describe "Union tests" $ do
@@ -187,9 +183,6 @@ spec = do
           typeOf structTable st expr `shouldBe` Right (TCharacter (CharLenInt 13) 1)
 
     it "Get combination of data references and subscripts" $ do
-      pending
-    {- TODO: 2021-09-06: fails with fortran-src ErrorCall: Use of varName on
-        non-variable
       pf <- getTestProgramAnalysis "test/structure_table/structure4.f"
       let pus = allPU pf
           logics
@@ -212,7 +205,6 @@ spec = do
             , Right (TArray (TInteger 1) (Just [(1, 3)]))
             ]
       mapM_ (uncurry testStructureTablePU) $ zip pus logics
-      -}
 
     it "Character substrings" $ do
       pf <- getTestProgramAnalysis "test/structure_table/structure5.f"

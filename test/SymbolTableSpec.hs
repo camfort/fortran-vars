@@ -383,9 +383,8 @@ spec = do
       valueOf "var_from_includee" symTable `shouldBe` Str "includee"
 
     it "Interface include" $ do
+      -- TODO 2021-09-06: fails with fortran-src ParseError: interface.inc: lexing failed
       pending
-    {- TODO: 2021-09-06: fails with fortran-src ParseError: interface.inc:
-        lexing failed
       contents <- flexReadFile path_interface
       symTable <- getSymTableIO path_interface contents unitName
 
@@ -395,7 +394,6 @@ spec = do
       -- Check we don't pick up subroutines or arguments
       M.member "index" symTable `shouldBe` False
       M.member "sespit_set_trdnum" symTable `shouldBe` False
-    -}
 
   describe "BOZ constants: " $ do
 
