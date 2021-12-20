@@ -29,6 +29,10 @@ import           Language.Fortran.AST           ( Expression(..)
                                                 , BinaryOp(..)
                                                 , Index(..)
                                                 )
+import           Language.Fortran.AST.RealLit   ( RealLit(..)
+                                                , Exponent(..)
+                                                , ExponentLetter(..)
+                                                )
 import           Language.Fortran.Intrinsics    ( getVersionIntrinsics
                                                 , getIntrinsicReturnType
                                                 , IntrinsicType(..)
@@ -54,6 +58,7 @@ import           Language.Fortran.Vars.Types
 import           Language.Fortran.Vars.Kind
                                                 ( getTypeKind
                                                 , setTypeKind
+                                                , toInt
                                                 )
 import           Language.Fortran.Vars.Eval
                                                 ( eval' )
@@ -140,11 +145,13 @@ typeOfValue
   -> Value a
   -> Either TypeError Type
 typeOfValue sp strTable symTable v = case v of
-  ValInteger i -> case readMaybe @Int i of
-    Just _  -> Right $ TInteger 4
-    Nothing -> Right $ TByte 4
-  ValReal r | 'D' `elem` map toUpper r -> Right (TReal 8)
-            | otherwise                -> Right (TReal 4)
+  ValInteger _ mkp -> Right $ TInteger (kpOrDef 4 mkp)
+  ValReal r _ -> -- TODO ignoring kind param
+    let k = case exponentLetter (realLitExponent r) of
+              ExpLetterE ->  4
+              ExpLetterD ->  8
+              ExpLetterQ -> 16
+     in Right $ TReal k
   ValComplex real imaginary -> do
     tr <- typeOf strTable symTable real
     ti <- typeOf strTable symTable imaginary
@@ -153,9 +160,17 @@ typeOfValue sp strTable symTable v = case v of
       else return (TComplex 8)
   ValString    s -> Right $ TCharacter (CharLenInt (length s)) 1
   ValHollerith s -> Right . TByte $ length s
-  ValLogical   _ -> Right $ TLogical 4
+  ValLogical   _ mkp -> Right $ TLogical (kpOrDef 4 mkp)
+  ValBoz       b -> Right $ TByte 4
   _              -> Left $ UnknownType sp
-
+  where
+    evalMaybeKind k = either (const Nothing) (Just . toInt) $ eval' symTable k
+    -- TODO ignoring kind param errors (should report better)
+    kpOrDef kDef = \case
+       Nothing -> kDef
+       Just kp -> case evalMaybeKind kp of
+                    Nothing -> kDef
+                    Just k  -> k
 
 promote :: Type -> Type -> Type
 promote t1 t2

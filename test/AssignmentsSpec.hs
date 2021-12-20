@@ -36,7 +36,7 @@ spec = describe "Grab assignment exprs" $ do
     length stmts `shouldBe` 9
     map fst stmts `shouldBe` replicate 9 (TReal 4)
     let getVal = \case
-          ExpValue _ _ (ValInteger s) -> s
+          ExpValue _ _ (ValInteger s _) -> s
           _                           -> error "Not value"
     map (getVal . snd) stmts
       `shouldBe` ["1", "0", "0", "0", "1", "0", "0", "0", "1"]

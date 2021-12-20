@@ -28,8 +28,8 @@ dSym :: SymbolTable
 dSym = M.empty
 
 true, false :: Expression A0
-true = ExpValue () dSpan $ ValLogical ".TRUE."
-false = ExpValue () dSpan $ ValLogical ".FALSE."
+true = ExpValue () dSpan $ ValLogical True Nothing
+false = ExpValue () dSpan $ ValLogical False Nothing
 
 foobar :: Expression A0
 foobar = ExpValue () dSpan $ ValVariable "foobar"
@@ -84,6 +84,6 @@ spec = describe "Boolean constant folding" $ do
     evalWithShortcircuit dSym ex `shouldBe` Right (Logical True)
   it "Can handle conditions with non-logical logic" $ do
     -- .TRUE. .EQ. 1
-    let vx = ExpValue () dSpan $ ValInteger "1"
+    let vx = ExpValue () dSpan $ ValInteger "1" Nothing
         ex = ExpBinary () dSpan EQ true vx
     evalWithShortcircuit dSym ex `shouldBe` Right (Logical True)

@@ -1,3 +1,6 @@
+## 0.3.0 (Unreleased)
+  * Update to fortran-src 0.7.0
+
 ## 0.2.0 (24 Nov 2021)
   * Update to fortran-src 0.6.0
   * Gather type info from COMMON blocks better (as they now support dimension
