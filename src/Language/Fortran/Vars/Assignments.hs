@@ -17,6 +17,7 @@ import           Language.Fortran.AST           ( ProgramUnit
                                                 , DataGroup(..)
                                                 , Expression(..)
                                                 , Declarator(..)
+                                                , DeclaratorType(..)
                                                 , Value(..)
                                                 , aStrip
                                                 )
@@ -62,7 +63,7 @@ allAssignStmts pu =
     ]
     <> [ (, e) <$> ty
        | StParameter _ _ decls <- universeBi pu :: [Statement (Analysis a)]
-       , DeclVariable _ _ v _ (Just e) <- aStrip decls
+       , Declarator _ _ v ScalarDecl _ (Just e) <- aStrip decls
        , let ty = typeOf strt symt v
        ]
     <> [ res
@@ -98,8 +99,8 @@ declarators
   -> [Declarator (Analysis a)]
   -> [Either TypeError (Type, Expression (Analysis a))]
 declarators strt symt = concatMap f where
-  f (DeclVariable _ _ v _ (Just e)) = pure $ (, e) <$> typeOf strt symt v
-  f d@(DeclArray _ _ (ExpValue _ s (ValVariable v)) _ _ (Just (ExpInitialisation _ _ vals)))
+  f (Declarator _ _ v ScalarDecl _ (Just e)) = pure $ (, e) <$> typeOf strt symt v
+  f d@(Declarator _ _ (ExpValue _ s (ValVariable v)) ArrayDecl{} _ (Just (ExpInitialisation _ _ vals)))
     = case M.lookup v symt of
       Just (SVariable (TArray ty (Just dims)) _) ->
         let tys   = expandDimensions dims ty

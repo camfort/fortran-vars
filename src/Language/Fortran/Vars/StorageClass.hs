@@ -30,9 +30,7 @@ storageClassStmt puModel (StAutomatic _ _ decls) = foldl' f
                                                           puModel
                                                           (aStrip decls)
  where
-  f m (DeclVariable _ _ varExp _ _) =
-    updateStorageClass (srcName varExp) Automatic m
-  f m (DeclArray _ _ varExp _ _ _) =
+  f m (Declarator _ _ varExp _ _ _) =
     updateStorageClass (srcName varExp) Automatic m
 storageClassStmt puModel (StSave _ _ (Just exps)) = foldl' f
                                                            puModel

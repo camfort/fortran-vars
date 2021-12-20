@@ -27,6 +27,7 @@ import           Language.Fortran.AST           ( Statement(..)
                                                 , ProgramFile
                                                 , TypeSpec(..)
                                                 , Declarator(..)
+                                                , DeclaratorType(..)
                                                 , aStrip
                                                 )
 import           Language.Fortran.Extras
@@ -61,17 +62,17 @@ itemToEntry st (StructUnion _ _ l) = [UnionEntry $ handleUnion st <$> aStrip l]
 itemToEntry _  StructStructure{}   = []
 
 -- TODO take into account length, should override default typespecs
--- | Given the `TypeSpec` and `Declerator` found in a field entry create a
--- `StructureTableEntry`
+-- | Given the 'TypeSpec' and 'Declarator' found in a field entry create a
+--   'StructureTableEntry'
 handleDeclarator
   :: SymbolTable
   -> TypeSpec (Analysis a)
   -> Declarator (Analysis a)
   -> Maybe StructureTableEntry
-handleDeclarator st ty (DeclVariable _ _ expr _ _) =
+handleDeclarator st ty (Declarator _ _ expr ScalarDecl _ _) =
   let scalarTy = typeSpecToScalarType st ty
   in  expToName expr >>= \name -> Just $ FieldEntry name scalarTy
-handleDeclarator st ty (DeclArray _ _ expr dims _ _) =
+handleDeclarator st ty (Declarator _ _ expr (ArrayDecl dims) _ _) =
   let arrayty = typeSpecToArrayType st (aStrip dims) ty
   in  expToName expr >>= \name -> Just $ FieldEntry name arrayty
 

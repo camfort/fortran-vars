@@ -121,6 +121,5 @@ processCommon pu puModel =
                   in  M.insert commonName newBlock mbs
               f model (l1, l2) = let (model', _) = union model l1 l2 in model'
           in  foldl' f (symTable, mbs') (zip commBlockLocations varLocations)
-      declExpr (DeclVariable _ _ e _ _)   = e
-      declExpr (DeclArray    _ _ e _ _ _) = e
+      declExpr (Declarator _ _ e _ _ _) = e
   in  M.foldrWithKey processComm puModel commons
