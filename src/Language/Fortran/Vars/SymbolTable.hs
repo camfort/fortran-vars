@@ -22,6 +22,7 @@ import           Language.Fortran.AST           ( AList
                                                 , Block(..)
                                                 , CommonGroup(..)
                                                 , Declarator(..)
+                                                , DeclaratorType(..)
                                                 , DimensionDeclarator(..)
                                                 , Expression(..)
                                                 , Index(..)
@@ -90,7 +91,7 @@ handleParameter
   :: Data a => SymbolTable -> AList Declarator (Analysis a) -> SymbolTable
 handleParameter symTable alist = foldl' f symTable (aStrip alist)
  where
-  f symt (DeclVariable _ _ varExp _ (Just valExp)) =
+  f symt (Declarator _ _ varExp ScalarDecl _ (Just valExp)) =
     let symbol = srcName varExp
         val'   = case eval symt valExp of
           boz@(Boz _) -> resolveBozConstant symTable symbol boz
@@ -145,7 +146,7 @@ handleDeclaration symTable typespec decls = foldl' f symTable (aStrip decls)
         Nothing -> SVariable (TCharacter CharLenStar 1) (symbol, 0)
     in  M.insert symbol entry symt
   -- don't care initial value at this moment
-  f symt (DeclVariable _ s varExp charLength _) =
+  f symt (Declarator _ s varExp ScalarDecl charLength _) =
     let
       symbol = srcName varExp
       ty'    = baseToType bt
@@ -190,7 +191,7 @@ handleDeclaration symTable typespec decls = foldl' f symTable (aStrip decls)
               Nothing -> SVariable ty'' (symbol, 0)
           in
             M.insert symbol entry symt
-  f symt (DeclArray _ _ varExp dimDecls charLength _) =
+  f symt (Declarator _ _ varExp (ArrayDecl dimDecls) charLength _) =
     let
       symbol = srcName varExp
       entry  = case charLength of
@@ -247,17 +248,18 @@ stSymbols symTable = \case
   _                            -> symTable
  where
   handleDimension symt = \case
-    DeclArray _ _ varExp dimDecls _ _ ->
+    Declarator _ _ varExp (ArrayDecl dimDecls) _ _ ->
       upgradeScalarToArray (srcName varExp) dimDecls symt
-    -- DIMENSION statements only permit 'DeclArray's, so this is impossible in a
-    -- correct parser.
-    DeclVariable{} -> error "non-array declaration in a DIMENSION statement"
+    -- DIMENSION statements only permit array declarators, so this is impossible
+    -- in a correct parser.
+    Declarator _ _ _ ScalarDecl _ _ ->
+      error "non-array declaration in a DIMENSION statement"
   handleCommon symt (CommonGroup _ _ mName decls) =
     let arrayDecls = catMaybes . map extractArrayDecl . aStrip $ decls
      in foldl' (uncurry . handleArrayDecl) symt arrayDecls
   extractArrayDecl = \case
-    DeclArray _ _ v d _ _ -> Just (v, aStrip d)
-    DeclVariable{}        -> Nothing
+    Declarator _ _ v (ArrayDecl d) _ _ -> Just (v, aStrip d)
+    Declarator _ _ _ ScalarDecl    _ _ -> Nothing
 
 -- | Try to upgrade an existing scalar variable to an array variable.
 --
@@ -325,12 +327,11 @@ declToType symt name tyspec (d : ds) = if name == getName d
   then Just $ toType d
   else declToType symt name tyspec ds
  where
-  getName (DeclArray _ _ (ExpValue _ _ (ValVariable str)) _ _ _) = str
-  getName (DeclVariable _ _ (ExpValue _ _ (ValVariable str)) _ _) = str
+  getName (Declarator _ _ (ExpValue _ _ (ValVariable str)) _ _ _) = str
   getName _ = error "Unexpected declaration expression"
-  toType (DeclArray _ _ _ dims _ _) =
+  toType (Declarator _ _ _ (ArrayDecl dims) _ _) =
     typeSpecToArrayType symt (aStrip dims) tyspec
-  toType DeclVariable{} = typeSpecToScalarType symt tyspec
+  toType (Declarator _ _ _ ScalarDecl _ _) = typeSpecToScalarType symt tyspec
 declToType _ _ _ [] = Nothing
 
 -- | Update SymbolTable for a given block, traverse statements to get
