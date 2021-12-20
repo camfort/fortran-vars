@@ -27,6 +27,8 @@ import           Language.Fortran.AST           ( BinaryOp(..)
                                                 , UnaryOp(..)
                                                 , Value(..)
                                                 )
+import           Language.Fortran.AST.RealLit   ( readRealLit )
+import           Language.Fortran.AST.Boz       ( prettyBoz )
 import           Language.Fortran.Util.Position ( SrcSpan )
 
 
@@ -42,40 +44,6 @@ import           Language.Fortran.Vars.Types
 import           Data.Bits                      ( (.|.)
                                                 , complement
                                                 )
-
--- | Given a 'SrcSpan' and the 'String' string at that span,
--- return either a string describing the error encountered, or
--- the double held by that string.
-readReal :: SrcSpan -> String -> Either String Double
-readReal s r =
-  let r' = transform r
-  in  maybe
-          (Left $ "Expected a real value at " ++ show s ++ " got '" ++ r' ++ "'"
-          )
-          Right
-        $ readMaybe r'
- where
-  uniformPrecision 'D' = 'E'
-  uniformPrecision 'Q' = 'E'
-  uniformPrecision c   = c
-  transform' []             = []
-  transform' ['.'         ] = []
-  transform' ('.' : y : ys) = case uniformPrecision (toUpper y) of
-    'E' -> 'E' : transform' ys
-    _   -> '.' : y : transform' ys
-  transform' (x : xs) = uniformPrecision (toUpper x) : transform' xs
-  transform xs@('.' : _) = transform' $ '0' : xs
-  transform xs           = transform' xs
-
-
--- | Given a 'String', return either a 'String' describing the
--- issue that prevented the read or the 'Bool' value contained
--- in the string
-readLogical :: String -> Either String Bool
-readLogical s = case map toUpper s of
-  ".TRUE."  -> Right True
-  ".FALSE." -> Right False
-  _         -> invalidArg' "readLogical" [s]
 
 -- | Given a function that returns an 'Either' and an 'Either' with
 -- the 'Right' case as the same type input to the function, return
@@ -118,15 +86,12 @@ transformEitherList t el = case eitherListToList el of
 -- by that 'Value'.
 valueToExpVal' :: SrcSpan -> Value a -> Either String ExpVal
 valueToExpVal' s val = case val of
-  ValInteger i ->
-    let i' = readMaybe i :: Maybe Int
-    in  case i' of
-          Just valInt -> Right $ Int valInt
-          Nothing     -> Right $ Boz i
-  ValReal      r  -> transformEither (Right . Real) $ readReal s r
-  ValString    s' -> Right $ Str s'
-  ValLogical   l  -> transformEither (Right . Logical) $ readLogical l
-  ValHollerith h  -> Right $ Str h
+  ValInteger   i  _ -> Right $ Int     $ read i
+  ValReal      r  _ -> Right $ Real    $ readRealLit r
+  ValLogical   l  _ -> Right $ Logical l
+  ValString    s'   -> Right $ Str s'
+  ValHollerith h    -> Right $ Str h
+  ValBoz       b    -> Right $ Boz $ prettyBoz b
   _               -> Left ("toExpVal: unsupported value at " ++ show s)
 
 -- | Given a 'SrcSpan' and the 'Value' returnthe 'ExpVal' held

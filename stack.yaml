@@ -4,5 +4,5 @@ packages:
 save-hackage-creds: false
 
 extra-deps:
-- fortran-src-0.6.0
+- fortran-src-0.7.0@sha256:6d7e1eb8befaa703a679ad162da3462fcd3a3fb7c2416436260609227ec3e4f0,7811
 - fortran-src-extras-0.2.0@sha256:13afb3b30c5cd93213a8869d2571a8fa4d65b9a9429765f6aef2cf47c70b0dea,1991
