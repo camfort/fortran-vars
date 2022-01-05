@@ -91,7 +91,7 @@ valueToExpVal' s val = case val of
   ValLogical   l  _ -> Right $ Logical l
   ValString    s'   -> Right $ Str s'
   ValHollerith h    -> Right $ Str h
-  ValBoz       b    -> Right $ Boz $ prettyBoz b
+  ValBoz       b    -> Right $ Boz b
   _               -> Left ("toExpVal: unsupported value at " ++ show s)
 
 -- | Given a 'SrcSpan' and the 'Value' returnthe 'ExpVal' held

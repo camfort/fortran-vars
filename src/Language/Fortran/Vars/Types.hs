@@ -27,6 +27,7 @@ import           Language.Fortran.AST           ( Name
                                                 , Expression
                                                 , Kind
                                                 )
+import qualified Language.Fortran.AST.Boz       as AST
 import           Language.Fortran.Util.Position ( SrcSpan(..)
                                                 , Position(..)
                                                 )
@@ -42,9 +43,13 @@ data ExpVal
   | Real    Double
   | Str     String
   | Logical Bool
-  | Boz     String
+  | Boz     AST.Boz
   deriving (Eq, Ord, Show, Data, Typeable, Generic, NFData)
 
+instance FromJSON AST.Boz
+instance ToJSON AST.Boz
+instance FromJSON AST.BozPrefix
+instance ToJSON AST.BozPrefix
 instance FromJSON ExpVal
 instance ToJSON ExpVal
 
