@@ -1,5 +1,9 @@
 ## 0.3.0 (Unreleased)
   * Update to fortran-src 0.8.0
+  * Replace BozDecomposed with new Boz type in fortran-src
+    * Due to how the BozConstant module was used, this should have minimal
+      impact. Code that reads and writes BOZs into `ExpVal`s directly may need
+      updating.
 
 ## 0.2.0 (24 Nov 2021)
   * Update to fortran-src 0.6.0
