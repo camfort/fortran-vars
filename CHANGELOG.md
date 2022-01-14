@@ -1,4 +1,4 @@
-## 0.3.0 (10 Jan 2021)
+## 0.3.0 (10 Jan 2022)
   * Update to fortran-src 0.8.0
   * Replace BozDecomposed with new Boz type in fortran-src
     * Due to how the BozConstant module was used, this should have minimal
