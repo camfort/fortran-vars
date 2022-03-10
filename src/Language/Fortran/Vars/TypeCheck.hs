@@ -288,31 +288,43 @@ typeOfFunctionCall sp strT symT name argList =
   -- accordingly
   checkIntrinsicFunction :: Either TypeError Type
   checkIntrinsicFunction
-    | name `elem` ["int", "nint"], length args == 1 = Right (TInteger 4)
-    | name `elem` ["int", "nint"], length args == 2 = case
-        eval' symT (args !! 1)
-      of
-        Right (Int k) -> Right (TInteger k)
-        _             -> Left $ typeError
-          sp
-          (  "Unable to determine the second argument value of "
-          <> name
-          <> " function"
-          )
-    | name == "int2" = Right (TInteger 2)
-    | name `elem` ["loc", "sizeof", "iachar"] = Right (TInteger 4)
-    | name == "dfloat" = Right (TReal 8)
-    | name `elem` ["ishft", "rshift", "ibset", "ibits"], not (null args) = typeOf
-      strT
-      symT
-      (head args)
-    | name `elem` ["iand", "ior", "ieor", "and"], length args == 2 = do
+    | name `elem` ["int", "nint"], length args == 1
+    = Right (TInteger 4)
+    | name `elem` ["int", "nint"], length args == 2
+    = case eval' symT (args !! 1) of
+      Right (Int k) -> Right (TInteger k)
+      _             -> Left $ typeError
+        sp
+        (  "Unable to determine the second argument value of "
+        <> name
+        <> " function"
+        )
+    | name == "int2"
+    = Right (TInteger 2)
+    | name `elem` ["loc", "sizeof", "iachar"]
+    = Right (TInteger 4)
+    | name == "dfloat"
+    = Right (TReal 8)
+    | name `elem` ["ishft", "lshift", "rshift", "ibset", "ibits"], not
+      (null args)
+    = typeOf strT symT (head args)
+    | name `elem` ["iand", "ior", "ieor", "and"], length args == 2
+    = do
       t1 <- typeOf strT symT (head args)
       t2 <- typeOf strT symT (args !! 1)
       return $ promote t1 t2
-    | name == "btest", length args == 2 = return $ TLogical 4
-    | name == "not", length args == 1 = typeOf strT symT (head args)
-    | otherwise = Left $ typeError
+    | name == "imag", length args == 1
+    = do
+      ty <- typeOf strT symT (head args)
+      case ty of
+        TComplex x -> Right . TReal $ x `div` 2
+        _          -> Left $ typeError sp "Invalid argument to imag"
+    | name == "btest", length args == 2
+    = return $ TLogical 4
+    | name == "not", length args == 1
+    = typeOf strT symT (head args)
+    | otherwise
+    = Left $ typeError
       sp
       (name <> " is not in the extra list of intrinsic functions")
 
