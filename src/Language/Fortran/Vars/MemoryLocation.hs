@@ -18,17 +18,12 @@ import           Language.Fortran.AST           ( AList(..)
                                                 , Value(..)
                                                 )
 
-import           Language.Fortran.Vars.Eval
-                                                ( eval )
-import           Language.Fortran.Vars.Kind
-                                                ( toInt
+import           Language.Fortran.Vars.Eval     ( eval )
+import           Language.Fortran.Vars.Kind     ( toInt
                                                 , getTypeKind
                                                 )
-import           Language.Fortran.Vars.Range
-                                                ( Range )
-import           Language.Fortran.Vars.Types
-                                                ( SymbolTableEntry(..)
-                                                , Type(..)
+import           Language.Fortran.Vars.Range    ( Range )
+import           Language.Fortran.Vars.Types    ( SymbolTableEntry(..)
                                                 , SemType(..)
                                                 , Location
                                                 , Offset

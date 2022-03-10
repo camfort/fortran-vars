@@ -4,8 +4,7 @@ import           Control.Exception              ( evaluate )
 import           Language.Fortran.Extras.Analysis
                                                 ( versionedExpandedProgramAnalysis
                                                 )
-import           Language.Fortran.Util.Files
-                                                ( flexReadFile )
+import           Language.Fortran.Util.Files    ( flexReadFile )
 import           Language.Fortran.Extras.ProgramFile
                                                 ( versionedProgramFile )
 import           Data.ByteString.Char8          ( ByteString )
@@ -15,10 +14,9 @@ import           Language.Fortran.Version       ( FortranVersion(..) )
 import           Language.Fortran.Analysis      ( initAnalysis )
 import           Test.Hspec
 
-import           Language.Fortran.Vars ( programFileModel )
-import           Language.Fortran.Vars.Types
-                                                ( SymbolTableEntry(..)
-                                                , Type(..)
+import           Language.Fortran.Vars          ( programFileModel )
+import           Language.Fortran.Vars.Types    ( SymbolTableEntry(..)
+                                                , Type
                                                 , SemType(..)
                                                 , CharacterLen(..)
                                                 , ExpVal(..)
@@ -73,9 +71,9 @@ dummyOf name symTable =
         SDummy (TArray (TCharacter CharLenStar _) Nothing) ->
           "DummyArrayDynamicCharacter"
         SDummy (TCharacter CharLenStar _) -> "DummyDynamicCharacter"
-        SDummy (TArray _ Nothing  ) -> "DummyDynamicArray"
-        SDummy (TArray _ (Just _) ) -> "DummyStaticArray"
-        SDummy _                    -> "DummyStaticScalar"
+        SDummy (TArray _ Nothing) -> "DummyDynamicArray"
+        SDummy (TArray _ (Just _)) -> "DummyStaticArray"
+        SDummy _ -> "DummyStaticScalar"
         v -> error (name ++ " is not a DummyVariableEntry it is a " ++ show v)
 
 isDummy :: String -> SymbolTable -> Bool
@@ -87,9 +85,9 @@ isDynamic :: String -> SymbolTable -> Bool
 isDynamic name symTable = case M.lookup name symTable of
   Just (SVariable ty _) -> case ty of
     TArray (TCharacter CharLenStar _) _ -> True
-    TArray _ Nothing   -> True
+    TArray _ Nothing -> True
     TCharacter CharLenStar _ -> True
-    _                  -> False
+    _ -> False
   _ -> False
 
 spec :: Spec
@@ -583,7 +581,8 @@ spec = do
     it "Dynamic character static array" $ do
       contents <- flexReadFile path
       let st = getSymTable path contents "f4"
-      typeOf "arr" st `shouldBe` TArray (TCharacter CharLenStar 1) (Just [(1, 5)])
+      typeOf "arr" st
+        `shouldBe` TArray (TCharacter CharLenStar 1) (Just [(1, 5)])
       isDynamic "arr" st `shouldBe` True
 
     it "Static character dynamic array" $ do

@@ -11,14 +11,10 @@ import           Data.Either                    ( rights
 import           Language.Fortran.AST           ( Expression(..)
                                                 , Value(..)
                                                 )
-import           Language.Fortran.Extras
-                                                ( allPU )
-import           Language.Fortran.Extras.Test
-                                                ( getTestProgramAnalysis )
+import           Language.Fortran.Extras        ( allPU )
+import           Language.Fortran.Extras.Test   ( getTestProgramAnalysis )
 import           Language.Fortran.Vars.Assignments
-import           Language.Fortran.Vars.Types
-                                                ( Type(..)
-                                                , SemType(..)
+import           Language.Fortran.Vars.Types    ( SemType(..)
                                                 , CharacterLen(..)
                                                 )
 
@@ -37,7 +33,7 @@ spec = describe "Grab assignment exprs" $ do
     map fst stmts `shouldBe` replicate 9 (TReal 4)
     let getVal = \case
           ExpValue _ _ (ValInteger s _) -> s
-          _                           -> error "Not value"
+          _                             -> error "Not value"
     map (getVal . snd) stmts
       `shouldBe` ["1", "0", "0", "0", "1", "0", "0", "0", "1"]
 
@@ -47,5 +43,6 @@ spec = describe "Grab assignment exprs" $ do
     length errs `shouldBe` 0
     length stmts `shouldBe` 1
     case head stmts of
-      (TCharacter CharLenStar _, ExpValue _ _ (ValString "ABCDEFGHI")) -> pure ()
+      (TCharacter CharLenStar _, ExpValue _ _ (ValString "ABCDEFGHI")) ->
+        pure ()
       _ -> assertFailure "Wrong statement matched"

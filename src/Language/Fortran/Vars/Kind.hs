@@ -6,9 +6,9 @@ module Language.Fortran.Vars.Kind
   , getTypeSize
   , setTypeSize
   , deriveSemTypeFromBaseType
-  ) where
+  )
+where
 
-import           Data.Either                    ( either )
 import           Data.Maybe                     ( fromJust )
 import           Language.Fortran.Analysis      ( Analysis )
 import           Language.Fortran.Analysis.Types
@@ -25,13 +25,10 @@ import           Language.Fortran.Analysis.SemanticTypes
                                                 , setTypeSize
                                                 )
 
-import           Language.Fortran.Vars.Errors
-                                                ( invalidArg )
-import           Language.Fortran.Vars.Eval
-                                                ( eval' )
-import           Language.Fortran.Vars.Types
-                                                ( ExpVal(..)
-                                                , Type(..)
+import           Language.Fortran.Vars.Errors   ( invalidArg )
+import           Language.Fortran.Vars.Eval     ( eval' )
+import           Language.Fortran.Vars.Types    ( ExpVal(..)
+                                                , Type
                                                 , SemType(..)
                                                 , CharacterLen(..)
                                                 , SymbolTable

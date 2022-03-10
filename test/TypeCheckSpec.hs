@@ -6,19 +6,17 @@ import           Data.Either                    ( isLeft )
 import           Data.List                      ( find )
 import qualified Data.Map                      as M
 import           Data.Data                      ( Data )
-import           Language.Fortran.Extras
-                                                ( allPUS
+import           Language.Fortran.Extras        ( allPUS
                                                 , allPU
                                                 )
-import           Language.Fortran.Extras.Test
-                                                ( getTestProgramAnalysis )
+import           Language.Fortran.Extras.Test   ( getTestProgramAnalysis )
 import           Language.Fortran.AST
 import           Language.Fortran.Analysis      ( stripAnalysis )
-import           Language.Fortran.Vars ( programFileModel )
-import           Language.Fortran.Vars.Types
-                                                ( Type(..)
+import           Language.Fortran.Vars          ( programFileModel )
+import           Language.Fortran.Vars.Types    ( Type
                                                 , SemType(..)
-                                                , CharacterLen(..) )
+                                                , CharacterLen(..)
+                                                )
 import           Language.Fortran.Vars.TypeCheck
                                                 ( typeOf
                                                 , TypeOf

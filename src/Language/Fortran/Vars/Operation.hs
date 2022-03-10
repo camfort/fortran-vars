@@ -17,18 +17,13 @@ import           Prelude                 hiding ( GT
                                                 , EQ
                                                 , LT
                                                 )
-import           Data.Char                      ( toUpper
-                                                , chr
-                                                )
-import           Data.Either                    ( either )
-import           Text.Read                      ( readMaybe )
+import           Data.Char                      ( chr )
 
 import           Language.Fortran.AST           ( BinaryOp(..)
                                                 , UnaryOp(..)
                                                 , Value(..)
                                                 )
 import           Language.Fortran.AST.RealLit   ( readRealLit )
-import           Language.Fortran.AST.Boz       ( prettyBoz )
 import           Language.Fortran.Util.Position ( SrcSpan )
 
 
@@ -36,10 +31,8 @@ import           Language.Fortran.Vars.BozConstant
                                                 ( bozToInt8
                                                 , bozToInt
                                                 )
-import           Language.Fortran.Vars.Errors
-                                                ( invalidArg' )
-import           Language.Fortran.Vars.Types
-                                                ( ExpVal(..) )
+import           Language.Fortran.Vars.Errors   ( invalidArg' )
+import           Language.Fortran.Vars.Types    ( ExpVal(..) )
 
 import           Data.Bits                      ( (.|.)
                                                 , complement
@@ -86,12 +79,12 @@ transformEitherList t el = case eitherListToList el of
 -- by that 'Value'.
 valueToExpVal' :: SrcSpan -> Value a -> Either String ExpVal
 valueToExpVal' s val = case val of
-  ValInteger   i  _ -> Right $ Int     $ read i
-  ValReal      r  _ -> Right $ Real    $ readRealLit r
-  ValLogical   l  _ -> Right $ Logical l
-  ValString    s'   -> Right $ Str s'
-  ValHollerith h    -> Right $ Str h
-  ValBoz       b    -> Right $ Boz b
+  ValInteger i _  -> Right $ Int $ read i
+  ValReal    r _  -> Right $ Real $ readRealLit r
+  ValLogical l _  -> Right $ Logical l
+  ValString    s' -> Right $ Str s'
+  ValHollerith h  -> Right $ Str h
+  ValBoz       b  -> Right $ Boz b
   _               -> Left ("toExpVal: unsupported value at " ++ show s)
 
 -- | Given a 'SrcSpan' and the 'Value' returnthe 'ExpVal' held
@@ -108,8 +101,8 @@ nonLogicalToLogical (Int  i) = Right $ i /= 0
 nonLogicalToLogical (Real r) = Right $ r /= 0.0
 nonLogicalToLogical (Str _) =
   Left "Cannot transform a string value to a logical value"
-nonLogicalToLogical (  Logical l) = Right l
-nonLogicalToLogical b@(Boz     _) = nonLogicalToLogical $ bozToInt8 b
+nonLogicalToLogical (Logical l) = Right l
+nonLogicalToLogical (Boz     b) = nonLogicalToLogical $ bozToInt8 b
 
 -- | Given a string representing a function call and a list of ExpVal
 -- values holding inputs to the function, evaluate the function call
@@ -159,7 +152,7 @@ not' vs      = invalidArg' "not" vs
 int' :: [ExpVal] -> Either String ExpVal
 int' [Int  i] = Right $ Int i
 int' [Real r] = Right $ Int (truncate r)
-int' v@[boz@(Boz _), Int k] =
+int' v@[(Boz boz), Int k] =
   if k `elem` [2, 4, 8] then Right $ bozToInt k boz else invalidArg' "int" v
 int' vs = invalidArg' "int" vs
 
@@ -218,13 +211,13 @@ binaryOp' op val1 val2 = case (op, val1, val2) of
   (LT, Real a, Real b) -> Right $ Logical (a < b)
   (LT, Int a, Real b) -> Right $ Logical (fromIntegral a < b)
   (LT, Real a, Int b) -> Right $ Logical (a < fromIntegral b)
-  (LT, a@(Boz _), b) -> binaryOp' LT (bozToInt8 a) b
-  (LT, a, b@(Boz _)) -> binaryOp' LT a (bozToInt8 b)
+  (LT, Boz boz, b) -> binaryOp' LT (bozToInt8 boz) b
+  (LT, a, Boz boz) -> binaryOp' LT a (bozToInt8 boz)
 
   (EQ, Int a, Real b) -> Right $ Logical (fromIntegral a == b)
   (EQ, Real a, Int b) -> Right $ Logical (a == fromIntegral b)
-  (EQ, a@(Boz _), b) -> binaryOp' EQ (bozToInt8 a) b
-  (EQ, a, b@(Boz _)) -> binaryOp' EQ a (bozToInt8 b)
+  (EQ, Boz boz, b) -> binaryOp' EQ (bozToInt8 boz) b
+  (EQ, a, Boz boz) -> binaryOp' EQ a (bozToInt8 boz)
   (EQ, Logical True, Int b) -> Right $ Logical (1 == b)
   (EQ, Logical False, Int b) -> Right $ Logical (0 == b)
   (EQ, Int a, Logical True) -> Right $ Logical (a == 1)
