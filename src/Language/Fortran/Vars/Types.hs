@@ -8,7 +8,8 @@ module Language.Fortran.Vars.Types
   , SemType(..)
   , CharacterLen(..)
   , Kind
-  ) where
+  )
+where
 
 import           Language.Fortran.Extras.Encoding
                                                 ( )
@@ -27,13 +28,14 @@ import           Language.Fortran.AST           ( Name
                                                 , Expression
                                                 , Kind
                                                 )
-import qualified Language.Fortran.AST.Boz       as AST
+import qualified Language.Fortran.AST.Boz      as AST
 import           Language.Fortran.Util.Position ( SrcSpan(..)
                                                 , Position(..)
                                                 )
 import           Language.Fortran.Analysis.SemanticTypes
                                                 ( SemType(..)
-                                                , CharacterLen(..) )
+                                                , CharacterLen(..)
+                                                )
 
 type Type = SemType
 
@@ -46,6 +48,8 @@ data ExpVal
   | Boz     AST.Boz
   deriving (Eq, Ord, Show, Data, Typeable, Generic, NFData)
 
+-- instance FromJSON AST.Conforming
+-- instance ToJSON AST.Conforming
 instance FromJSON AST.Boz
 instance ToJSON AST.Boz
 instance FromJSON AST.BozPrefix

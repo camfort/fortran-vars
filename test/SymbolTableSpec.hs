@@ -11,7 +11,7 @@ import           Language.Fortran.Extras.ProgramFile
 import           Data.ByteString.Char8          ( ByteString )
 import qualified Data.Map                      as M
 import           Language.Fortran.AST           ( ProgramUnitName(..) )
-import           Language.Fortran.ParserMonad   ( FortranVersion(..) )
+import           Language.Fortran.Version       ( FortranVersion(..) )
 import           Language.Fortran.Analysis      ( initAnalysis )
 import           Test.Hspec
 

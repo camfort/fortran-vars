@@ -13,6 +13,7 @@ import           Language.Fortran.AST           ( Statement(..)
                                                 , Expression(..)
                                                 , Argument(..)
                                                 , aStrip
+                                                , argExprNormalize
                                                 )
 import           Language.Fortran.Analysis      ( Analysis
                                                 , srcName
@@ -43,7 +44,7 @@ subroutineCalls x subName =
 -- | Given a function call 'Expression', return the list of argument 'Expression'
 functionArguments :: Expression a -> [Expression a]
 functionArguments (ExpFunctionCall _ _ _ args) = case args of
-  Just args' -> map (\(Argument _ _ _ e) -> e) (aStrip args')
+  Just args' -> map (\(Argument _ _ _ e) -> argExprNormalize e) (aStrip args')
   Nothing    -> []
 functionArguments e =
   error $ "Expression at " ++ show (getSpan e) ++ " is not a function call"
@@ -52,7 +53,7 @@ functionArguments e =
 -- | Given a subroutine call 'Statement', return the list of argument 'Expression'
 subroutineArguments :: Statement a -> [Expression a]
 subroutineArguments (StCall _ _ _ args) = case args of
-  Just args' -> map (\(Argument _ _ _ e) -> e) (aStrip args')
+  Just args' -> map (\(Argument _ _ _ e) -> argExprNormalize e) (aStrip args')
   Nothing    -> []
 subroutineArguments s =
   error $ "Statement at " ++ show (getSpan s) ++ " is not a subroutine call"
