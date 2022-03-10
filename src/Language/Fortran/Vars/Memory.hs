@@ -6,8 +6,7 @@ module Language.Fortran.Vars.Memory
   )
 where
 
-import           Language.Fortran.Extras
-                                                ( allPUS )
+import           Language.Fortran.Extras        ( allPUS )
 import           Data.Data                      ( Data )
 import           Data.List                      ( foldl' )
 import           Data.Maybe                     ( fromMaybe )
@@ -27,20 +26,16 @@ import           Language.Fortran.AST           ( AList(..)
 
 import           Language.Fortran.Vars.MemoryLocation
                                                 ( getStartLocation )
-import           Language.Fortran.Vars.Types
-                                                ( SymbolTableEntry(..)
+import           Language.Fortran.Vars.Types    ( SymbolTableEntry(..)
                                                 , MemoryBlock(..)
                                                 , ProgramUnitModel
                                                 , SymbolTable
                                                 , StorageClass(..)
                                                 , StorageTable
-                                                , Type(..)
                                                 , SemType(..)
                                                 )
-import           Language.Fortran.Vars.Kind
-                                                ( getTypeKind )
-import           Language.Fortran.Vars.Union
-                                                ( union )
+import           Language.Fortran.Vars.Kind     ( getTypeKind )
+import           Language.Fortran.Vars.Union    ( union )
 
 -- | Given a 'SymbolTable' and an 'Expression', return the size of
 -- the variable represented by the expression

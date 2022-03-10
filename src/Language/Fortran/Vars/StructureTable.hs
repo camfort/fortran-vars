@@ -30,25 +30,22 @@ import           Language.Fortran.AST           ( Statement(..)
                                                 , DeclaratorType(..)
                                                 , aStrip
                                                 )
-import           Language.Fortran.Extras
-                                                ( allPUS
+import           Language.Fortran.Extras        ( allPUS
                                                 , allPU
                                                 )
 
 import           Language.Fortran.Vars.SymbolTable
                                                 ( collectSymbols )
-import           Language.Fortran.Vars.Types
-                                                ( SymbolTable
+import           Language.Fortran.Vars.Types    ( SymbolTable
                                                 , StructureTableEntry(..)
                                                 , Structure
                                                 , StructureTable
                                                 , ProgramStructureTables
-                                                , Type(..)
+                                                , Type
                                                 , SemType(..)
                                                 , TypeError(..)
                                                 )
-import           Language.Fortran.Vars.Utils
-                                                ( typeSpecToArrayType
+import           Language.Fortran.Vars.Utils    ( typeSpecToArrayType
                                                 , typeSpecToScalarType
                                                 )
 

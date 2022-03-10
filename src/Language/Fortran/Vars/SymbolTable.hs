@@ -10,22 +10,19 @@ import           Data.Data                      ( Data
                                                 )
 import           Data.List                      ( foldl' )
 import qualified Data.Map                      as M
-import           Data.Maybe                     ( catMaybes )
+import           Data.Maybe                     ( mapMaybe )
 
 import           Language.Fortran.Analysis      ( Analysis
                                                 , srcName
                                                 )
 import           Language.Fortran.AST           ( AList
-                                                , Argument(..)
                                                 , aStrip
-                                                , BaseType(..)
                                                 , Block(..)
                                                 , CommonGroup(..)
                                                 , Declarator(..)
                                                 , DeclaratorType(..)
                                                 , DimensionDeclarator(..)
                                                 , Expression(..)
-                                                , Index(..)
                                                 , Name
                                                 , ProgramUnit(..)
                                                 , programUnitBody
@@ -35,30 +32,25 @@ import           Language.Fortran.AST           ( AList
                                                 , Value(..)
                                                 )
 
-import           Language.Fortran.Vars.Eval
-                                                ( eval
+import           Language.Fortran.Vars.Eval     ( eval
                                                 , eval'
                                                 )
 import           Language.Fortran.Vars.BozConstant
                                                 ( resolveBozConstant )
-import           Language.Fortran.Vars.Types
-                                                ( ExpVal(..)
+import           Language.Fortran.Vars.Types    ( ExpVal(..)
                                                 , SymbolTableEntry(..)
-                                                , Type(..)
+                                                , Type
                                                 , SemType(..)
                                                 , CharacterLen(..)
                                                 , SymbolTable
                                                 )
-import           Language.Fortran.Vars.Utils
-                                                ( typeSpecToScalarType
+import           Language.Fortran.Vars.Utils    ( typeSpecToScalarType
                                                 , typeSpecToArrayType
                                                 )
-import           Language.Fortran.Vars.Kind
-                                                ( getKind
+import           Language.Fortran.Vars.Kind     ( getKind
                                                 , getTypeKind
                                                 , setTypeKind
                                                 , getKindOfExpVal
-                                                , toInt
                                                 , typeOfExpVal
                                                 , baseToType
                                                 , isStr
@@ -221,19 +213,24 @@ handleDeclaration symTable typespec decls = foldl' f symTable (aStrip decls)
 -- skipped.
 handleArrayDecl
   :: Data a
-  => SymbolTable -> Expression (Analysis a) -> [DimensionDeclarator (Analysis a)]
+  => SymbolTable
+  -> Expression (Analysis a)
+  -> [DimensionDeclarator (Analysis a)]
   -> SymbolTable
 handleArrayDecl symTable varExp dimDecls =
-    let symbol = srcName varExp
-        dims   = traverse (resolveDimensionDimensionDeclarator symTable) dimDecls
-     in case M.lookup symbol symTable of
-          Just (SVariable TArray{} _) -> error "invalid declarator: duplicate array declarations"
-          Just (SVariable ty loc) ->
-            let ste = SVariable (TArray ty dims) loc
-             in M.insert symbol ste symTable
-          Nothing -> -- add array info, use a placeholder for scalar type
-            let ste = SVariable (TArray placeholderIntrinsicType dims) (symbol, 0)
-             in M.insert symbol ste symTable
+  let symbol = srcName varExp
+      dims   = traverse (resolveDimensionDimensionDeclarator symTable) dimDecls
+  in  case M.lookup symbol symTable of
+        Just (SVariable TArray{} _) ->
+          error "invalid declarator: duplicate array declarations"
+        Just (SVariable ty loc) ->
+          let ste = SVariable (TArray ty dims) loc
+          in  M.insert symbol ste symTable
+        Just var -> error $ "Invalid declarator: " <> show var
+        Nothing -> -- add array info, use a placeholder for scalar type
+          let ste =
+                  SVariable (TArray placeholderIntrinsicType dims) (symbol, 0)
+          in  M.insert symbol ste symTable
   where placeholderIntrinsicType = TInteger 4
 
 -- | Given a 'SymbolTable' and a 'Statement' found in a 'ProgramUnit', return a new 'SymbolTable'
@@ -254,9 +251,9 @@ stSymbols symTable = \case
     -- in a correct parser.
     Declarator _ _ _ ScalarDecl _ _ ->
       error "non-array declaration in a DIMENSION statement"
-  handleCommon symt (CommonGroup _ _ mName decls) =
-    let arrayDecls = catMaybes . map extractArrayDecl . aStrip $ decls
-     in foldl' (uncurry . handleArrayDecl) symt arrayDecls
+  handleCommon symt (CommonGroup _ _ _ decls) =
+    let arrayDecls = mapMaybe extractArrayDecl . aStrip $ decls
+    in  foldl' (uncurry . handleArrayDecl) symt arrayDecls
   extractArrayDecl = \case
     Declarator _ _ v (ArrayDecl d) _ _ -> Just (v, aStrip d)
     Declarator _ _ _ ScalarDecl    _ _ -> Nothing
@@ -280,8 +277,10 @@ upgradeScalarToArray
 upgradeScalarToArray symbol dimDecls symTable =
   case M.lookup symbol symTable of
     Just (SVariable TArray{} _) ->
-      error $  symbol <> " is array-typed variable."
-            <> " Invalid fortran syntax (Duplicate DIMENSION attribute)"
+      error
+        $  symbol
+        <> " is array-typed variable."
+        <> " Invalid fortran syntax (Duplicate DIMENSION attribute)"
     Just (SVariable ty loc) ->
       let mdims = traverse (resolveDimensionDimensionDeclarator symTable)
                            (aStrip dimDecls)

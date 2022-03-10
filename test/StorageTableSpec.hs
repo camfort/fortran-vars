@@ -2,8 +2,7 @@ module StorageTableSpec where
 
 import           Test.Hspec
 
-import           Language.Fortran.Util.Files
-                                                ( flexReadFile )
+import           Language.Fortran.Util.Files    ( flexReadFile )
 import           Language.Fortran.Extras.ProgramFile
                                                 ( versionedProgramFile )
 import           Data.ByteString.Char8          ( ByteString )
@@ -15,12 +14,11 @@ import           Data.Maybe                     ( fromJust
 import           Language.Fortran.AST           ( Name
                                                 , ProgramUnitName(..)
                                                 )
-import           Language.Fortran.Version   ( FortranVersion(..) )
+import           Language.Fortran.Version       ( FortranVersion(..) )
 import           Language.Fortran.Analysis      ( initAnalysis )
 
-import           Language.Fortran.Vars ( programFileModel )
-import           Language.Fortran.Vars.Types
-                                                ( SymbolTableEntry(..)
+import           Language.Fortran.Vars          ( programFileModel )
+import           Language.Fortran.Vars.Types    ( SymbolTableEntry(..)
                                                 , Location
                                                 , MemoryBlock(..)
                                                 , MemoryBlockName
@@ -28,7 +26,6 @@ import           Language.Fortran.Vars.Types
                                                 , StorageClass(..)
                                                 , StorageTable
                                                 , SymbolTable
-                                                , Type(..)
                                                 , SemType(..)
                                                 , CharacterLen(..)
                                                 )

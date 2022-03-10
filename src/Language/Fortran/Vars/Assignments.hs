@@ -29,12 +29,11 @@ import           Language.Fortran.Vars.StructureTable
                                                 ( collectStructures )
 import           Language.Fortran.Vars.SymbolTable
                                                 ( collectSymbols )
-import           Language.Fortran.Vars.Types
-                                                ( SymbolTable
+import           Language.Fortran.Vars.Types    ( SymbolTable
                                                 , StructureTable
                                                 , SymbolTableEntry(..)
                                                 , Dimensions
-                                                , Type(..)
+                                                , Type
                                                 , SemType(..)
                                                 , TypeError(..)
                                                 , typeError
@@ -99,7 +98,8 @@ declarators
   -> [Declarator (Analysis a)]
   -> [Either TypeError (Type, Expression (Analysis a))]
 declarators strt symt = concatMap f where
-  f (Declarator _ _ v ScalarDecl _ (Just e)) = pure $ (, e) <$> typeOf strt symt v
+  f (Declarator _ _ v ScalarDecl _ (Just e)) =
+    pure $ (, e) <$> typeOf strt symt v
   f d@(Declarator _ _ (ExpValue _ s (ValVariable v)) ArrayDecl{} _ (Just (ExpInitialisation _ _ vals)))
     = case M.lookup v symt of
       Just (SVariable (TArray ty (Just dims)) _) ->

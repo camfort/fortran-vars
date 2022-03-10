@@ -10,10 +10,8 @@ import           Language.Fortran.AST           ( ProgramUnit
                                                 , Statement(..)
                                                 , Expression(..)
                                                 )
-import           Language.Fortran.Extras
-                                                ( allPU )
-import           Language.Fortran.Extras.Test
-                                                ( getTestProgramAnalysis )
+import           Language.Fortran.Extras        ( allPU )
+import           Language.Fortran.Extras.Test   ( getTestProgramAnalysis )
 
 import           Language.Fortran.Vars.StructureTable
                                                 ( StructureTable
@@ -23,9 +21,7 @@ import           Language.Fortran.Vars.StructureTable
                                                 )
 import           Language.Fortran.Vars.SymbolTable
                                                 ( collectSymbols )
-import           Language.Fortran.Vars.Types
-                                                ( SymbolTable
-                                                , Type(..)
+import           Language.Fortran.Vars.Types    ( SymbolTable
                                                 , SemType(..)
                                                 , CharacterLen(..)
                                                 )
@@ -76,15 +72,16 @@ spec = do
 
     it "multiple layer structures" $ do
       structTable <- getStructureTable "test/structure_table/structure3.f"
-      let
-        graultEntries = [FieldEntry "garply" (TCustom "quuz")]
-        quuzEntries =
-          [FieldEntry "corge" (TCustom "baz"), FieldEntry "foobar" (TInteger 2)]
-        fooEntries = [FieldEntry "bar" (TInteger 8)]
-        bazEntries =
-          [ FieldEntry "qux"  (TCustom "foo")
-          , FieldEntry "quux" (TCharacter (CharLenInt 10) 1)
-          ]
+      let graultEntries = [FieldEntry "garply" (TCustom "quuz")]
+          quuzEntries =
+            [ FieldEntry "corge"  (TCustom "baz")
+            , FieldEntry "foobar" (TInteger 2)
+            ]
+          fooEntries = [FieldEntry "bar" (TInteger 8)]
+          bazEntries =
+            [ FieldEntry "qux"  (TCustom "foo")
+            , FieldEntry "quux" (TCharacter (CharLenInt 10) 1)
+            ]
       structTable `shouldBe` M.fromList
         [ ("grault", graultEntries)
         , ("quuz"  , quuzEntries)
@@ -169,7 +166,8 @@ spec = do
                     universeBi pf :: [Expression (Analysis ())]
                   ]
           -- check looking up the expression succeeds and gives the correct type
-          typeOf structTable st expr `shouldBe` Right (TCharacter (CharLenInt 10) 1)
+          typeOf structTable st expr
+            `shouldBe` Right (TCharacter (CharLenInt 10) 1)
 
     it "Get type of union data reference expression"
       $ testStructureTable "test/structure_table/union_struct3.f"
@@ -180,7 +178,8 @@ spec = do
                   | e@ExpDataRef{} <-
                     universeBi pf :: [Expression (Analysis ())]
                   ]
-          typeOf structTable st expr `shouldBe` Right (TCharacter (CharLenInt 13) 1)
+          typeOf structTable st expr
+            `shouldBe` Right (TCharacter (CharLenInt 13) 1)
 
     it "Get combination of data references and subscripts" $ do
       pf <- getTestProgramAnalysis "test/structure_table/structure4.f"

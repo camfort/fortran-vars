@@ -7,19 +7,10 @@ module Language.Fortran.Vars.BozConstant
   )
 where
 
-import           Data.Char                      ( digitToInt
-                                                , intToDigit
-                                                , toLower
-                                                )
-import qualified Data.Map                       as M
-import           Numeric                        ( readInt
-                                                , showIntAtBase
-                                                )
-import           Text.Read                      ( ReadS )
+import qualified Data.Map                      as M
 
-import qualified Language.Fortran.AST.Boz       as AST
+import qualified Language.Fortran.AST.Boz      as AST
 import           Language.Fortran.Vars.Types    ( SymbolTableEntry(..)
-                                                , Type(..)
                                                 , SemType(..)
                                                 , Kind
                                                 , ExpVal(..)
@@ -70,17 +61,17 @@ resolveBozConstantInContext boz kind =
   in  if overflow > 0 then Int (minBinaryValue + overflow - 1) else Int decimal
 
 -- Convert BOZ string to integer of specific kind
-bozToInt :: Int -> ExpVal -> ExpVal
-bozToInt kind (Boz boz) = resolveBozConstantInContext boz kind
+bozToInt :: Int -> AST.Boz -> ExpVal
+bozToInt kind boz = resolveBozConstantInContext boz kind
 
 -- Convert BOZ string to integer*2
-bozToInt2 :: ExpVal -> ExpVal
+bozToInt2 :: AST.Boz -> ExpVal
 bozToInt2 = bozToInt 2
 
 -- Convert BOZ string to integer*4
-bozToInt4 :: ExpVal -> ExpVal
+bozToInt4 :: AST.Boz -> ExpVal
 bozToInt4 = bozToInt 4
 
 -- Convert BOZ string to integer*8
-bozToInt8 :: ExpVal -> ExpVal
+bozToInt8 :: AST.Boz -> ExpVal
 bozToInt8 = bozToInt 8

@@ -1,4 +1,7 @@
-module BozConstantSpec ( spec ) where
+module BozConstantSpec
+  ( spec
+  )
+where
 
 import           Test.Hspec
 
@@ -7,12 +10,11 @@ import           Language.Fortran.Vars.BozConstant
                                                 , bozToInt4
                                                 , bozToInt8
                                                 )
-import           Language.Fortran.Vars.Types
-                                                ( ExpVal(..) )
-import qualified Language.Fortran.AST.Boz       as AST
+import           Language.Fortran.Vars.Types    ( ExpVal(..) )
+import qualified Language.Fortran.AST.Boz      as AST
 
-boz :: String -> ExpVal
-boz = Boz . AST.parseBoz
+boz :: String -> AST.Boz
+boz = AST.parseBoz
 
 spec :: Spec
 spec = describe "Boz Constant Conversion" $ do

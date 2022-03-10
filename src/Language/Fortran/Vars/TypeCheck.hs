@@ -13,10 +13,8 @@ import           Prelude                 hiding ( GT
                                                 , LT
                                                 )
 import qualified Data.Map                      as M
-import           Data.Char                      ( toUpper )
 import           Data.Data                      ( toConstr )
 import           Data.Maybe                     ( fromJust )
-import           Text.Read                      ( readMaybe )
 import           Language.Fortran.AST           ( Expression(..)
                                                 , Value(..)
                                                 , AList(..)
@@ -48,7 +46,7 @@ import           Language.Fortran.Vars.Types    ( SymbolTableEntry(..)
                                                 , SymbolTable
                                                 , StructureTable
                                                 , Kind
-                                                , Type(..)
+                                                , Type
                                                 , SemType(..)
                                                 , CharacterLen(..)
                                                 , TypeError(..)
@@ -159,7 +157,7 @@ typeOfValue sp strTable symTable v = case v of
   ValString    s   -> Right $ TCharacter (CharLenInt (length s)) 1
   ValHollerith s   -> Right . TByte $ length s
   ValLogical _ mkp -> Right $ TLogical (kpOrDef 4 mkp)
-  ValBoz b         -> Right $ TByte 4
+  ValBoz _         -> Right $ TByte 4
   _                -> Left $ UnknownType sp
  where
   evalMaybeKind k = either (const Nothing) (Just . toInt) $ eval' symTable k
@@ -222,9 +220,9 @@ typeOfBinaryExp' sp op t1 t2
   -- TODO
   -- = Right . TCharacter $ (+) <$> k1 <*> k2
   = case t1 of
-    TCharacter l1 k1 -> case t2 of
-      TCharacter l2 k2 -> Right $ TCharacter (charLenConcat l1 l2) k1
-      _                -> error "shit 1"
+    TCharacter l1 k1' -> case t2 of
+      TCharacter l2 _ -> Right $ TCharacter (charLenConcat l1 l2) k1'
+      _               -> error "shit 1"
     _ -> error "shit 2"
   |
   -- Logical

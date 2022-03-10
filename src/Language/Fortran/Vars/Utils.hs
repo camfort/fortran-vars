@@ -2,18 +2,15 @@ module Language.Fortran.Vars.Utils where
 
 import           Language.Fortran.Analysis      ( Analysis )
 import           Language.Fortran.AST
-import           Language.Fortran.Vars.Types
-                                                ( SymbolTable
+import           Language.Fortran.Vars.Types    ( SymbolTable
                                                 , ExpVal(..)
-                                                , Type(..)
+                                                , Type
                                                 , SemType(..)
                                                 )
-import           Language.Fortran.Vars.Eval
-                                                ( eval
+import           Language.Fortran.Vars.Eval     ( eval
                                                 , eval'
                                                 )
-import           Language.Fortran.Vars.Kind
-                                                ( setTypeKind
+import           Language.Fortran.Vars.Kind     ( setTypeKind
                                                 , kindOfBaseType
                                                 , baseToType
                                                 )

@@ -11,7 +11,7 @@ import           Language.Fortran.AST           ( BinaryOp(..)
                                                 , Expression(..)
                                                 , Value(..)
                                                 , AList(..)
-                                                , Argument(..), argExtractExpr
+                                                , argExtractExpr
                                                 )
 import           Language.Fortran.Util.Position ( getSpan )
 
@@ -25,8 +25,7 @@ import           Language.Fortran.Vars.Operation
                                                 , valueToExpVal'
                                                 , intrinsicFunctionCall
                                                 )
-import           Language.Fortran.Vars.Types
-                                                ( SymbolTableEntry(..)
+import           Language.Fortran.Vars.Types    ( SymbolTableEntry(..)
                                                 , ExpVal(..)
                                                 , SymbolTable
                                                 )
@@ -45,7 +44,10 @@ eval' symTable expr = case expr of
   ExpBinary _ _ op e1 e2 ->
     binaryTransformEither (binaryOp' op) (eval' symTable e1) (eval' symTable e2)
   ExpFunctionCall _ _ (ExpValue _ _ function) (Just (AList _ _ args)) ->
-    transformEitherList intrinsicFunctionCall' $ eval' symTable . argExtractExpr <$> args
+    transformEitherList intrinsicFunctionCall'
+      $   eval' symTable
+      .   argExtractExpr
+      <$> args
    where
     intrinsicFunctionCall' = intrinsicFunctionCall $ functionName function
     functionName (ValVariable  name) = name
