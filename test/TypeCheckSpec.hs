@@ -348,6 +348,8 @@ spec = do
       typeof (rhs "b36") `shouldBe` Right (TInteger 4)
       typeof (rhs "b37") `shouldBe` Right (TInteger 8)
       typeof (rhs "b38") `shouldBe` Right (TLogical 4)
+      typeof (rhs "b39") `shouldBe` Right (TReal 8)
+      typeof (rhs "b40") `shouldBe` Right (TInteger 8)
 
   describe "Implied Do" $ it "data statements" $ do
     ProgramFile _ (pu : _) <- getTestProgramAnalysis

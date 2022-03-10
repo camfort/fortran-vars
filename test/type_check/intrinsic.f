@@ -5,6 +5,7 @@
       real r
       real*8 r8, rr8
       character*8 c
+      complex*16 z
 
 C     Integer intrinsics
       b1 = iabs(i)       ! Int 4
@@ -60,4 +61,6 @@ C     Misc
       b36 = ibits (i, 28, 4)    ! Int 4
       b37 = ibits (i8, 28, 4)   ! Int 8
       b38 = btest(2, 1)         ! Logical 4
+      b39 = imag(z)             ! Real 8
+      b40 = lshift(i8, 10)      ! Int 8
       end
