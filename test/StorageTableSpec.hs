@@ -15,7 +15,7 @@ import           Data.Maybe                     ( fromJust
 import           Language.Fortran.AST           ( Name
                                                 , ProgramUnitName(..)
                                                 )
-import           Language.Fortran.ParserMonad   ( FortranVersion(..) )
+import           Language.Fortran.Version   ( FortranVersion(..) )
 import           Language.Fortran.Analysis      ( initAnalysis )
 
 import           Language.Fortran.Vars ( programFileModel )

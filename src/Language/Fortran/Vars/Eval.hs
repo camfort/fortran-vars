@@ -11,7 +11,7 @@ import           Language.Fortran.AST           ( BinaryOp(..)
                                                 , Expression(..)
                                                 , Value(..)
                                                 , AList(..)
-                                                , Argument(..)
+                                                , Argument(..), argExtractExpr
                                                 )
 import           Language.Fortran.Util.Position ( getSpan )
 
@@ -45,16 +45,12 @@ eval' symTable expr = case expr of
   ExpBinary _ _ op e1 e2 ->
     binaryTransformEither (binaryOp' op) (eval' symTable e1) (eval' symTable e2)
   ExpFunctionCall _ _ (ExpValue _ _ function) (Just (AList _ _ args)) ->
-    transformEitherList intrinsicFunctionCall' $ evalArgs args
+    transformEitherList intrinsicFunctionCall' $ eval' symTable . argExtractExpr <$> args
    where
     intrinsicFunctionCall' = intrinsicFunctionCall $ functionName function
     functionName (ValVariable  name) = name
     functionName (ValIntrinsic name) = name
     functionName _                   = ""
-    evalArgs :: [Argument a] -> [Either String ExpVal]
-    evalArgs []                           = []
-    evalArgs [Argument _ _ _ arg        ] = [eval' symTable arg]
-    evalArgs (Argument _ _ _ arg : args') = eval' symTable arg : evalArgs args'
   _ -> Left $ "Unsupported expression at: " ++ show (getSpan expr)
 
 -- | Given a 'SymbolTable' and some 'Expression', evaluate that expression

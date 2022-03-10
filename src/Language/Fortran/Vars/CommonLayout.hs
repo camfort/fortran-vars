@@ -12,7 +12,7 @@ import           Language.Fortran.Vars.Types
                                                 , ProgramUnitModel
                                                 , StorageClass(..)
                                                 , Offset
-                                                , Type(..)
+                                                , Type
                                                 , SemType(..)
                                                 , CharacterLen(..)
                                                 )

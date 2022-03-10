@@ -60,7 +60,7 @@ library
     , containers >=0.5.7.1
     , deepseq >=1.4.4.0
     , fgl >=5
-    , fortran-src >=0.8.0 && <0.9
+    , fortran-src >=0.9.0 && <0.10
     , fortran-src-extras >=0.2.0
     , text >=1.2.2.2
     , uniplate >=1.6.10
@@ -80,7 +80,7 @@ executable fortran-vars
     , containers >=0.5.7.1
     , deepseq >=1.4.4.0
     , fgl >=5
-    , fortran-src >=0.8.0 && <0.9
+    , fortran-src >=0.9.0 && <0.10
     , fortran-src-extras >=0.2.0
     , fortran-vars
     , text >=1.2.2.2
@@ -114,7 +114,7 @@ test-suite spec
     , containers >=0.5.7.1
     , deepseq >=1.4.4.0
     , fgl >=5
-    , fortran-src >=0.8.0 && <0.9
+    , fortran-src >=0.9.0 && <0.10
     , fortran-src-extras >=0.2.0
     , fortran-vars
     , hspec

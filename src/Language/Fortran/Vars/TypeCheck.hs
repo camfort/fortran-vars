@@ -23,6 +23,7 @@ import           Language.Fortran.AST           ( Expression(..)
                                                 , aStrip
                                                 , aStrip'
                                                 , Argument(..)
+                                                , argExprNormalize
                                                 , DoSpecification(..)
                                                 , Statement(..)
                                                 , Name
@@ -37,13 +38,12 @@ import           Language.Fortran.Intrinsics    ( getVersionIntrinsics
                                                 , getIntrinsicReturnType
                                                 , IntrinsicType(..)
                                                 )
-import           Language.Fortran.ParserMonad   ( FortranVersion(..) )
+import           Language.Fortran.Version       ( FortranVersion(..) )
 
 import           Language.Fortran.Util.Position ( SrcSpan
                                                 , getSpan
                                                 )
-import           Language.Fortran.Vars.Types
-                                                ( SymbolTableEntry(..)
+import           Language.Fortran.Vars.Types    ( SymbolTableEntry(..)
                                                 , ExpVal(..)
                                                 , SymbolTable
                                                 , StructureTable
@@ -55,13 +55,11 @@ import           Language.Fortran.Vars.Types
                                                 , TypeOf
                                                 , typeError
                                                 )
-import           Language.Fortran.Vars.Kind
-                                                ( getTypeKind
+import           Language.Fortran.Vars.Kind     ( getTypeKind
                                                 , setTypeKind
                                                 , toInt
                                                 )
-import           Language.Fortran.Vars.Eval
-                                                ( eval' )
+import           Language.Fortran.Vars.Eval     ( eval' )
 import           Language.Fortran.Vars.StructureTable
                                                 ( lookupField )
 
@@ -148,29 +146,29 @@ typeOfValue sp strTable symTable v = case v of
   ValInteger _ mkp -> Right $ TInteger (kpOrDef 4 mkp)
   ValReal r _ -> -- TODO ignoring kind param
     let k = case exponentLetter (realLitExponent r) of
-              ExpLetterE ->  4
-              ExpLetterD ->  8
-              ExpLetterQ -> 16
-     in Right $ TReal k
+          ExpLetterE -> 4
+          ExpLetterD -> 8
+          ExpLetterQ -> 16
+    in  Right $ TReal k
   ValComplex real imaginary -> do
     tr <- typeOf strTable symTable real
     ti <- typeOf strTable symTable imaginary
     if tr == TReal 8 || ti == TReal 8
       then return (TComplex 16)
       else return (TComplex 8)
-  ValString    s -> Right $ TCharacter (CharLenInt (length s)) 1
-  ValHollerith s -> Right . TByte $ length s
-  ValLogical   _ mkp -> Right $ TLogical (kpOrDef 4 mkp)
-  ValBoz       b -> Right $ TByte 4
-  _              -> Left $ UnknownType sp
-  where
-    evalMaybeKind k = either (const Nothing) (Just . toInt) $ eval' symTable k
-    -- TODO ignoring kind param errors (should report better)
-    kpOrDef kDef = \case
-       Nothing -> kDef
-       Just kp -> case evalMaybeKind kp of
-                    Nothing -> kDef
-                    Just k  -> k
+  ValString    s   -> Right $ TCharacter (CharLenInt (length s)) 1
+  ValHollerith s   -> Right . TByte $ length s
+  ValLogical _ mkp -> Right $ TLogical (kpOrDef 4 mkp)
+  ValBoz b         -> Right $ TByte 4
+  _                -> Left $ UnknownType sp
+ where
+  evalMaybeKind k = either (const Nothing) (Just . toInt) $ eval' symTable k
+  -- TODO ignoring kind param errors (should report better)
+  kpOrDef kDef = \case
+    Nothing -> kDef
+    Just kp -> case evalMaybeKind kp of
+      Nothing -> kDef
+      Just k  -> k
 
 promote :: Type -> Type -> Type
 promote t1 t2
@@ -224,11 +222,10 @@ typeOfBinaryExp' sp op t1 t2
   -- TODO
   -- = Right . TCharacter $ (+) <$> k1 <*> k2
   = case t1 of
-      TCharacter l1 k1 ->
-        case t2 of
-          TCharacter l2 k2 -> Right $ TCharacter (charLenConcat l1 l2) k1
-          _ -> error "shit 1"
-      _ -> error "shit 2"
+    TCharacter l1 k1 -> case t2 of
+      TCharacter l2 k2 -> Right $ TCharacter (charLenConcat l1 l2) k1
+      _                -> error "shit 1"
+    _ -> error "shit 2"
   |
   -- Logical
     op `elem` [And, Or, Equivalent, NotEquivalent, XOr]
@@ -260,10 +257,9 @@ typeOfSubString sp symt strt ty (IxRange _ _ lower upper _) = do
   isInteger $ traverse (typeOf strt symt) upper
   pure $ TCharacter calcLen 1
  where
-  calcLen =
-      case (\x y -> y - x + 1) <$> lowerIndex <*> upperIndex of
-        Nothing  -> CharLenStar
-        Just len -> CharLenInt len
+  calcLen = case (\x y -> y - x + 1) <$> lowerIndex <*> upperIndex of
+    Nothing  -> CharLenStar
+    Just len -> CharLenInt len
   isInteger = \case
     Right (Just (TInteger _)) -> Right ()
     Right Nothing -> Right ()
@@ -289,7 +285,7 @@ typeOfFunctionCall
 typeOfFunctionCall sp strT symT name argList =
   checkIntrinsicFunction <> checkF77IntrinsicFunction <> checkExternalFunction
  where
-  args = [ e | Argument _ _ _ e <- argList ]
+  args = [ argExprNormalize e | Argument _ _ _ e <- argList ]
   -- If the function is any of the intrinsics below, determine its return type
   -- accordingly
   checkIntrinsicFunction :: Either TypeError Type

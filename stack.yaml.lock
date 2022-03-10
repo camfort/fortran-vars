@@ -3,24 +3,24 @@
 # For more information, please see the documentation at:
 #   https://docs.haskellstack.org/en/stable/lock_files
 
-packages:
-- completed:
-    hackage: fortran-src-0.8.0@sha256:9ab6d1f26452139d44860790d340c900253154b8b4b1bb695d8140be686d6aa1,7811
-    pantry-tree:
-      size: 8809
-      sha256: 2d93aa453f01092d454f0cde100b481ed61057ecf0dc6ecb147aa88e0c02c012
-  original:
-    hackage: fortran-src-0.8.0@sha256:9ab6d1f26452139d44860790d340c900253154b8b4b1bb695d8140be686d6aa1,7811
-- completed:
-    hackage: fortran-src-extras-0.2.0@sha256:13afb3b30c5cd93213a8869d2571a8fa4d65b9a9429765f6aef2cf47c70b0dea,1991
-    pantry-tree:
-      size: 984
-      sha256: cfbc2648c35b4437bd8fbdd0dc5f4fc644266ccf5dcb14c87b2f42a426e1a565
-  original:
-    hackage: fortran-src-extras-0.2.0@sha256:13afb3b30c5cd93213a8869d2571a8fa4d65b9a9429765f6aef2cf47c70b0dea,1991
 snapshots:
-- completed:
-    size: 533053
-    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/16/28.yaml
+- original: lts-16.28
+  completed:
     sha256: a9c01d860ac8dfb3a1b6f7ec4a36dd9504a95392b89c99b0877da63fa36a8e97
-  original: lts-16.28
+    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/16/28.yaml
+    size: 533053
+packages:
+- original:
+    hackage: fortran-src-0.9.0@sha256:4912cbe951bb28681ef2c17bde35392a588c8c4290b54cfac9a5185f3f104074,9206
+  completed:
+    pantry-tree:
+      sha256: 6a23e09e54d84a2830c6a910323428bc654b2bbddd2d461cb9ecbb40af8bff3d
+      size: 8799
+    hackage: fortran-src-0.9.0@sha256:4912cbe951bb28681ef2c17bde35392a588c8c4290b54cfac9a5185f3f104074,9206
+- original:
+    hackage: fortran-src-extras-0.3.0@sha256:a3cdbb02079653eb5abbac30796bda95099453eb51616001edf761321810631d,2010
+  completed:
+    pantry-tree:
+      sha256: 8b40707b7fa61a99afa402ba736ffdf45a0673aa14272bed4b9f91beffd1e1cf
+      size: 904
+    hackage: fortran-src-extras-0.3.0@sha256:a3cdbb02079653eb5abbac30796bda95099453eb51616001edf761321810631d,2010
