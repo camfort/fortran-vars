@@ -5,7 +5,10 @@ where
 
 import           Data.Data                      ( Data )
 import           Data.List                      ( foldl' )
-import           Language.Fortran.Analysis      ( Analysis )
+import           Data.Maybe                     ( fromMaybe )
+import           Language.Fortran.Analysis      ( Analysis
+                                                , srcName
+                                                )
 import           Language.Fortran.AST           ( AList
                                                 , aStrip
                                                 , Expression
@@ -14,12 +17,10 @@ import           Language.Fortran.AST           ( AList
 
 import           Language.Fortran.Vars.MemoryLocation
                                                 ( getLocation )
-import           Language.Fortran.Vars.Types
-                                                ( Location
+import           Language.Fortran.Vars.Types    ( Location
                                                 , ProgramUnitModel
                                                 )
-import           Language.Fortran.Vars.Union
-                                                ( union )
+import           Language.Fortran.Vars.Union    ( union )
 
 associate :: ProgramUnitModel -> [Location] -> ProgramUnitModel
 associate puModel locations =
@@ -30,7 +31,7 @@ associate puModel locations =
 
 equivalence
   :: Data a => ProgramUnitModel -> Statement (Analysis a) -> ProgramUnitModel
-equivalence puModel0 (StEquivalence _ _ equivsList) = foldl'
+equivalence puModel0 (StEquivalence _ ss equivsList) = foldl'
   f
   puModel0
   (aStrip equivsList)
@@ -41,7 +42,15 @@ equivalence puModel0 (StEquivalence _ _ equivsList) = foldl'
     -> AList Expression (Analysis a)
     -> ProgramUnitModel
   f model@(symTable, _) equivs =
-    let locations = map (getLocation symTable) (aStrip equivs)
+    let
+      locations =
+        (\x ->
+            fromMaybe
+                (error $ "Couldn't calculate location at " <> show ss <> srcName x
+                )
+              $ getLocation symTable x
+          )
+          <$> aStrip equivs
     in  associate model locations
 equivalence model _ = model
 
