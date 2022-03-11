@@ -18,7 +18,7 @@ import           Language.Fortran.AST           ( AList(..)
                                                 , Value(..)
                                                 )
 
-import           Language.Fortran.Vars.Eval     ( eval )
+import           Language.Fortran.Vars.Eval     ( eval' )
 import           Language.Fortran.Vars.Kind     ( toInt
                                                 , getTypeKind
                                                 )
@@ -72,52 +72,59 @@ findBlockOffset symTable symbol offset = case M.lookup symbol symTable of
       ++ " at offset "
       ++ show offset
 
-calculateOffset :: Data a => SymbolTable -> Name -> [Index (Analysis a)] -> Int
+calculateOffset
+  :: Data a => SymbolTable -> Name -> [Index (Analysis a)] -> Maybe Int
 -- array index c(2,4)
 calculateOffset symTable symbol indices@(IxSingle{} : _) =
   let Just entry = M.lookup symbol symTable
-  in  case entry of
-        SVariable (TArray ty (Just dims)) _ ->
-          let ixSingles    = takeWhile isIxSingle indices
-              Just kind    = getTypeKind ty
-              arrayIndices = map toIndices ixSingles
-                 where
-                  toIndices (IxSingle _ _ _ expr) = toInt $ eval symTable expr
-                  toIndices _ = error "toIndices: unexpected input"
-          in  linearizedIndex arrayIndices dims * kind
-        _ ->
-          error "Only array-typed VariableEntries are expected at this point"
+  in
+    case entry of
+      SVariable (TArray ty (Just dims)) _ ->
+        let
+          ixSingles    = takeWhile isIxSingle indices
+          Just kind    = getTypeKind ty
+          arrayIndices = either (const Nothing) Just
+            $ traverse toIndices ixSingles
+           where
+            toIndices (IxSingle _ _ _ expr) = toInt <$> eval' symTable expr
+            toIndices _ = error "toIndices: unexpected input"
+        in
+          (\x -> linearizedIndex x dims * kind) <$> arrayIndices
+      _ -> error "Only array-typed VariableEntries are expected at this point"
 -- substring c(:5)
-calculateOffset _ _ (IxRange _ _ Nothing _ _ : _) = 0
+calculateOffset _ _ (IxRange _ _ Nothing _ _ : _) = Just 0
 -- substring c(5:)
 calculateOffset symTable _ (IxRange _ _ (Just lowerIndex) _ _ : _) =
-  toInt (eval symTable lowerIndex) - 1
+  let val = eval' symTable lowerIndex
+  in  either (const Nothing) (\x -> Just $ toInt x - 1) val
 calculateOffset _ _ _ = error "calculateOffset: invalid index"
 
 -- | Given a 'SymbolTable' and some 'Expression' (which is assumed to have been predetermined
 -- to be of some variable type), return the 'Location' that the variable in question will be
 -- located in memory
-getLocation :: Data a => SymbolTable -> Expression (Analysis a) -> Location
+getLocation
+  :: Data a => SymbolTable -> Expression (Analysis a) -> Maybe Location
 -- variable
 getLocation symTable e@(ExpValue _ _ (ValVariable _)) =
-  findBlockOffset symTable (srcName e) 0
+  Just $ findBlockOffset symTable (srcName e) 0
 -- array index c(2,4)
 -- substring c(5:10)
 getLocation symTable (ExpSubscript _ _ e@ExpValue{} (AList _ _ indices)) =
   let symbol = srcName e
       offset = calculateOffset symTable symbol indices
-  in  findBlockOffset symTable symbol offset
+  in  findBlockOffset symTable symbol <$> offset
 -- array index and substring c(2,4)(1:20)
 getLocation symTable (ExpSubscript _ _ (ExpSubscript _ _ e@ExpValue{} (AList _ _ indices)) (AList _ _ subs))
   = let symbol = srcName e
         offset =
-            calculateOffset symTable symbol indices
-              + calculateOffset symTable symbol subs
-    in  findBlockOffset symTable symbol offset
+            (+)
+              <$> calculateOffset symTable symbol indices
+              <*> calculateOffset symTable symbol subs
+    in  findBlockOffset symTable symbol <$> offset
 -- array within common block with dimensions declaration: common /block/ a, b(10)
 getLocation symTable (ExpFunctionCall _ _ e@ExpValue{} _) =
-  findBlockOffset symTable (srcName e) 0
-getLocation _ _ = error "getLocation : Not a variable expression"
+  Just $ findBlockOffset symTable (srcName e) 0
+getLocation _ _ = Nothing
 
 -- | Given a 'SymbolTable' and some 'Expression' (which is assumed to have been
 -- predetermined to be of some variable type), return the start 'Location' that
