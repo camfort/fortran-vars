@@ -1,8 +1,10 @@
+{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE TupleSections #-}
 
 module Language.Fortran.Vars.Memory
   ( allocateMemoryBlocks
   , processCommon
+  , getTypeSize
   )
 where
 
@@ -32,6 +34,7 @@ import           Language.Fortran.Vars.Types    ( SymbolTableEntry(..)
                                                 , SymbolTable
                                                 , StorageClass(..)
                                                 , StorageTable
+                                                , Type
                                                 , SemType(..)
                                                 )
 import           Language.Fortran.Vars.Kind     ( getTypeKind )
@@ -48,15 +51,17 @@ getSize symTable expr =
         _          -> error "Unsupported expression"
       Just entity = M.lookup symbol symTable
   in  case entity of
-        SVariable (TArray ty dims) _ ->
-          fromMaybe (error "Can't calculate size of dynamic array")
-            $   sizeOfStaticArray
-            <$> getTypeKind ty
-            <*> dims
-        SVariable ty _ ->
-          fromMaybe (error "Can't get size of dynamic variable")
-            $ getTypeKind ty
-        _ -> error (symbol ++ " is not a VariableEntry.")
+        SVariable ty _ -> getTypeSize ty
+        _              -> error (symbol ++ " is not a VariableEntry.")
+
+getTypeSize :: Type -> Int
+getTypeSize = \case
+  TArray ty dims ->
+    fromMaybe (error "Can't calculate size of dynamic array")
+      $   sizeOfStaticArray
+      <$> getTypeKind ty
+      <*> dims
+  ty -> fromMaybe (error "Can't get size of dynamic variable") $ getTypeKind ty
 
 -- | Given a static array's 'kind' and 'dimension', calculate its size
 sizeOfStaticArray :: Int -> [(Int, Int)] -> Int
