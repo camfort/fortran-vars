@@ -226,8 +226,19 @@ typeOfBinaryExp' sp op t1 t2
     _ -> error "shit 2"
   |
   -- Logical
+  -- NB when integer's are used with logical operators you get bitwise
+  -- arithmetic behaviour
     op `elem` [And, Or, Equivalent, NotEquivalent, XOr]
-  = Right . TLogical . fromJust $ max <$> k1 <*> k2
+  = let
+      ty = case (t1, t2) of
+        (TLogical _, TLogical _) -> Right . TLogical
+        (TInteger _, _         ) -> Right . TInteger
+        (_         , TInteger _) -> Right . TInteger
+        (TByte _   , _         ) -> Right . TInteger
+        (_         , TByte _   ) -> Right . TInteger
+        _                        -> const
+          (Left $ typeError sp "Unexpected types used with logical operators")
+    in  ty . fromJust $ max <$> k1 <*> k2
   |
   -- Arithmetic
     op `elem` [Addition, Subtraction, Multiplication, Division, Exponentiation]

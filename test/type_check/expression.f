@@ -80,10 +80,11 @@ C     Relational Expression
 
 C     Logical Expression
       le1 = l .AND. l2    ! logical 4
-      le2 = i8 .OR. l     ! logical 8
+      le2 = i8 .OR. l     ! integer 8
       le3 = l1 .XOR. l2   ! logical 2
       le4 = l1 .EQV. l2   ! logical 2
       le5 = l  .NEQV. l2  ! logical 4
+      le6 = r8 .or. l     ! error
 
 C     More expressions
       e1 = 42 * i8 - i4             ! int 8
