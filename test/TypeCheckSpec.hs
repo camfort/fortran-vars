@@ -273,10 +273,11 @@ spec = do
     it "Logical Expression" $ do
       (typeof, rhs) <- helper path puName
       typeof (rhs "le1") `shouldBe` Right (TLogical 4)
-      typeof (rhs "le2") `shouldBe` Right (TLogical 8)
+      typeof (rhs "le2") `shouldBe` Right (TInteger 8)
       typeof (rhs "le3") `shouldBe` Right (TLogical 2)
       typeof (rhs "le4") `shouldBe` Right (TLogical 2)
       typeof (rhs "le5") `shouldBe` Right (TLogical 4)
+      typeof (rhs "le6") `shouldSatisfy` typeError
 
     it "More expressions" $ do
       (typeof, rhs) <- helper path puName
