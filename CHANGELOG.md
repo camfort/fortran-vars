@@ -1,3 +1,11 @@
+## Unreleased
+  * Update to fortran-src 0.10.2
+  * do some type checking for logical operators used with non LOGICAL arguments
+    #6
+  * add type checking for `imag`, `lshift` intrinsics
+  * MemoryLocation: change `getLocation` to return a `Maybe` type
+  * Memory: expose `getTypeSize` function
+
 ## 0.3.0 (10 Jan 2022)
   * Update to fortran-src 0.8.0
   * Replace BozDecomposed with new Boz type in fortran-src
