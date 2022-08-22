@@ -28,9 +28,15 @@ import           Language.Fortran.AST           ( Expression(..)
                                                 , BinaryOp(..)
                                                 , Index(..)
                                                 )
-import           Language.Fortran.AST.RealLit   ( RealLit(..)
+import           Language.Fortran.AST.Literal   ( KindParam(..) )
+import           Language.Fortran.AST.Literal.Real
+                                                ( RealLit(..)
                                                 , Exponent(..)
                                                 , ExponentLetter(..)
+                                                )
+import           Language.Fortran.AST.Literal.Complex
+                                                ( ComplexLit(..)
+                                                , ComplexPart(..)
                                                 )
 import           Language.Fortran.Intrinsics    ( getVersionIntrinsics
                                                 , getIntrinsicReturnType
@@ -73,10 +79,10 @@ typeOf strTable symTable expr = case expr of
   ExpValue _ s val                -> typeOfValue s strTable symTable val
   ExpUnary _ _ _ e                -> typeOf strTable symTable e
   ExpBinary _ s op e1 e2 -> typeOfBinaryExp s strTable symTable op e1 e2
-  ExpFunctionCall _ _ (ExpValue _ s (ValVariable name)) margs ->
-    typeOfFunctionCall s strTable symTable name (aStrip' margs)
-  ExpFunctionCall _ _ (ExpValue _ s (ValIntrinsic name)) margs ->
-    typeOfFunctionCall s strTable symTable name (aStrip' margs)
+  ExpFunctionCall _ _ (ExpValue _ s (ValVariable name)) args ->
+    typeOfFunctionCall s strTable symTable name (aStrip args)
+  ExpFunctionCall _ _ (ExpValue _ s (ValIntrinsic name)) args ->
+    typeOfFunctionCall s strTable symTable name (aStrip args)
   ExpSubscript _ s arr (AList _ _ args@(IxSingle{} : _)) ->
     let isIxRange = \case
           IxRange{} -> True
@@ -134,6 +140,8 @@ typeOfSymbol symTable name = case M.lookup name symTable of
   Nothing -> Left $ UnboundVariable name
 
 -- | Internal function to determine the 'Type' of a constant
+--
+-- TODO ignoring kind param errors (should report better)
 typeOfValue
   :: SrcSpan
   -> StructureTable
@@ -148,9 +156,9 @@ typeOfValue sp strTable symTable v = case v of
           ExpLetterD -> 8
           ExpLetterQ -> 16
     in  Right $ TReal k
-  ValComplex real imaginary -> do
-    tr <- typeOf strTable symTable real
-    ti <- typeOf strTable symTable imaginary
+  ValComplex c -> do
+    tr <- typeOfComplexPart strTable symTable $ complexLitRealPart c
+    ti <- typeOfComplexPart strTable symTable $ complexLitImagPart c
     if tr == TReal 8 || ti == TReal 8
       then return (TComplex 16)
       else return (TComplex 8)
@@ -159,14 +167,17 @@ typeOfValue sp strTable symTable v = case v of
   ValLogical _ mkp -> Right $ TLogical (kpOrDef 4 mkp)
   ValBoz _         -> Right $ TByte 4
   _                -> Left $ UnknownType sp
- where
-  evalMaybeKind k = either (const Nothing) (Just . toInt) $ eval' symTable k
-  -- TODO ignoring kind param errors (should report better)
-  kpOrDef kDef = \case
-    Nothing -> kDef
-    Just kp -> case evalMaybeKind kp of
+  where
+    kpOrDef :: Kind -> Maybe (KindParam a) -> Kind
+    kpOrDef kDef = \case
       Nothing -> kDef
-      Just k  -> k
+      Just kp -> case kp of
+        KindParamInt _ _ kpLit -> read kpLit
+        KindParamVar _ _ kpVar ->
+          let kpVarExpr = ExpValue undefined undefined (ValVariable kpVar)
+          in  case eval' symTable kpVarExpr of
+                Left{} -> kDef
+                Right k -> toInt k
 
 promote :: Type -> Type -> Type
 promote t1 t2
@@ -364,3 +375,10 @@ typeOfFunctionCall sp strT symT name argList =
   -- in the symbol table.
   checkExternalFunction :: Either TypeError Type
   checkExternalFunction = typeOfSymbol symT name
+
+typeOfComplexPart :: StructureTable -> SymbolTable -> ComplexPart a -> Either TypeError Type
+typeOfComplexPart strTable symTable = \case
+  ComplexPartReal   _ ss cpReal mkp -> tOfVal ss (ValReal    cpReal mkp)
+  ComplexPartInt    _ ss cpInt  mkp -> tOfVal ss (ValInteger cpInt  mkp)
+  ComplexPartNamed  _ _ nm         -> typeOfSymbol symTable nm
+  where tOfVal ss v = typeOfValue ss strTable symTable v

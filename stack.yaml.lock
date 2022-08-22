@@ -3,24 +3,31 @@
 # For more information, please see the documentation at:
 #   https://docs.haskellstack.org/en/stable/lock_files
 
-snapshots:
-- original: lts-16.28
-  completed:
-    sha256: a9c01d860ac8dfb3a1b6f7ec4a36dd9504a95392b89c99b0877da63fa36a8e97
-    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/16/28.yaml
-    size: 533053
 packages:
-- original:
-    hackage: fortran-src-0.9.0@sha256:4912cbe951bb28681ef2c17bde35392a588c8c4290b54cfac9a5185f3f104074,9206
-  completed:
+- completed:
+    hackage: fortran-src-0.10.2@sha256:9fd8af81f7c4ee9cd519cbf06cb0cab22f8ed5340ebd271fb5040613952e1703,9659
     pantry-tree:
-      sha256: 6a23e09e54d84a2830c6a910323428bc654b2bbddd2d461cb9ecbb40af8bff3d
-      size: 8799
-    hackage: fortran-src-0.9.0@sha256:4912cbe951bb28681ef2c17bde35392a588c8c4290b54cfac9a5185f3f104074,9206
-- original:
-    hackage: fortran-src-extras-0.3.0@sha256:a3cdbb02079653eb5abbac30796bda95099453eb51616001edf761321810631d,2010
-  completed:
+      size: 9297
+      sha256: 698f610ca3154e06550a64dddb02c6bab764fbe57af34161788e9b9529e91aee
+  original:
+    hackage: fortran-src-0.10.2
+- completed:
+    hackage: fortran-src-extras-0.3.1@sha256:7501440ee806e4b566b4e420b9907cc8a6e97a459a80ec218a790ab0db61101b,4133
     pantry-tree:
-      sha256: 8b40707b7fa61a99afa402ba736ffdf45a0673aa14272bed4b9f91beffd1e1cf
-      size: 904
-    hackage: fortran-src-extras-0.3.0@sha256:a3cdbb02079653eb5abbac30796bda95099453eb51616001edf761321810631d,2010
+      size: 1513
+      sha256: b464c449fb8b5f0f0b59d745bd3fcd6d4152522178fc7ef718440c4fcd63fb53
+  original:
+    hackage: fortran-src-extras-0.3.1
+- completed:
+    hackage: yaml-0.11.8.0@sha256:049261f85bdcaf06e5298709edcfd0337fe706683b3631a81dc49aa4a18ba1a5,4936
+    pantry-tree:
+      size: 2044
+      sha256: 7f32163524a27865c85074a9e17011879e9e17ae342e0a35c0dd883df381fe2e
+  original:
+    hackage: yaml-0.11.8.0
+snapshots:
+- completed:
+    size: 619173
+    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/19/20.yaml
+    sha256: be747117bed6d462806c883352c3206325b23480825103f5c87884e97e52819a
+  original: lts-19.20

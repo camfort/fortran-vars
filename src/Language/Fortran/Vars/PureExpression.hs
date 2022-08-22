@@ -9,6 +9,10 @@ import           Language.Fortran.AST           ( Expression(..)
                                                 , Value(..)
                                                 , aStrip
                                                 )
+import           Language.Fortran.AST.Literal.Complex
+                                                ( ComplexLit(..)
+                                                , ComplexPart(..)
+                                                )
 import           Language.Fortran.Vars.Call
                                                 ( functionArguments )
 
@@ -36,7 +40,7 @@ isPureExpression ExpDataRef{}    = False
 isPureValue :: Value a -> Bool
 isPureValue ValInteger{}       = True
 isPureValue ValReal{}          = True
-isPureValue (ValComplex e1 e2) = isPureExpression e1 && isPureExpression e2
+isPureValue (ValComplex c)     = complexLitIsPure c
 isPureValue ValString{}        = True
 isPureValue ValHollerith{}     = True
 isPureValue ValVariable{}      = True
@@ -44,6 +48,14 @@ isPureValue ValIntrinsic{}     = True
 isPureValue ValLogical{}       = True
 isPureValue ValStar            = True
 isPureValue _                  = False
+
+-- | Is the given COMPLEX literal "pure", i.e. does it have no named constant
+--   components?
+complexLitIsPure :: ComplexLit a -> Bool
+complexLitIsPure c =
+    check (complexLitRealPart c) && check (complexLitImagPart c)
+  where check = \case ComplexPartNamed{} -> False
+                      _                  -> True
 
 -- | Given an 'Index', determine whether it is pure
 isPureIndex :: Index a -> Bool

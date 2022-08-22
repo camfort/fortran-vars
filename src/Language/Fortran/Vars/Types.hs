@@ -12,6 +12,7 @@ module Language.Fortran.Vars.Types
 where
 
 import           Language.Fortran.Extras.Encoding
+import           Language.Fortran.Vars.Orphans
                                                 ( )
 import           Data.Aeson                     ( FromJSON
                                                 , ToJSON
@@ -26,15 +27,15 @@ import           Control.DeepSeq                ( NFData )
 import           Language.Fortran.AST           ( Name
                                                 , ProgramUnitName
                                                 , Expression
-                                                , Kind
                                                 )
-import qualified Language.Fortran.AST.Boz      as AST
+import qualified Language.Fortran.AST.Literal.Boz      as AST
 import           Language.Fortran.Util.Position ( SrcSpan(..)
                                                 , Position(..)
                                                 )
 import           Language.Fortran.Analysis.SemanticTypes
                                                 ( SemType(..)
                                                 , CharacterLen(..)
+                                                , Kind
                                                 )
 
 type Type = SemType
@@ -50,10 +51,6 @@ data ExpVal
 
 -- instance FromJSON AST.Conforming
 -- instance ToJSON AST.Conforming
-instance FromJSON AST.Boz
-instance ToJSON AST.Boz
-instance FromJSON AST.BozPrefix
-instance ToJSON AST.BozPrefix
 instance FromJSON ExpVal
 instance ToJSON ExpVal
 
@@ -150,7 +147,7 @@ data TypeError
 
 -- | Helper method for getting the FilePath out of SrcSpan
 typeError :: SrcSpan -> String -> TypeError
-typeError sp = let SrcSpan p _ = sp in TypeError (filePath p) sp
+typeError sp = let SrcSpan p _ = sp in TypeError (posFilePath p) sp
 
 instance ToJSON TypeError
 instance FromJSON TypeError
