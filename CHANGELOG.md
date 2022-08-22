@@ -1,8 +1,8 @@
-## Unreleased
+## 0.3.1 (22 Aug 2022)
   * Update to fortran-src 0.10.2
-  * do some type checking for logical operators used with non LOGICAL arguments
+  * Do some type checking for logical operators used with non LOGICAL arguments
     #6
-  * add type checking for `imag`, `lshift` intrinsics
+  * Add type checking for `imag`, `lshift` intrinsics
   * MemoryLocation: change `getLocation` to return a `Maybe` type
   * Memory: expose `getTypeSize` function
 
