@@ -1,3 +1,6 @@
+-- TODO 2022-08-22 raehik: essentially obsoleted by
+-- @Language.Fortran.AST.Literal.BozSpec@ in fortran-src
+
 module BozConstantSpec
   ( spec
   )
@@ -11,7 +14,7 @@ import           Language.Fortran.Vars.BozConstant
                                                 , bozToInt8
                                                 )
 import           Language.Fortran.Vars.Types    ( ExpVal(..) )
-import qualified Language.Fortran.AST.Boz      as AST
+import qualified Language.Fortran.AST.Literal.Boz      as AST
 
 boz :: String -> AST.Boz
 boz = AST.parseBoz

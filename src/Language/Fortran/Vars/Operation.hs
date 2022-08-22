@@ -23,7 +23,7 @@ import           Language.Fortran.AST           ( BinaryOp(..)
                                                 , UnaryOp(..)
                                                 , Value(..)
                                                 )
-import           Language.Fortran.AST.RealLit   ( readRealLit )
+import           Language.Fortran.AST.Literal.Real ( readRealLit )
 import           Language.Fortran.Util.Position ( SrcSpan )
 
 

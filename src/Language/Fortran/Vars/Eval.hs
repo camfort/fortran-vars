@@ -43,7 +43,7 @@ eval' symTable expr = case expr of
   ExpUnary _ _ op e -> transformEither (unaryOp' op) $ eval' symTable e
   ExpBinary _ _ op e1 e2 ->
     binaryTransformEither (binaryOp' op) (eval' symTable e1) (eval' symTable e2)
-  ExpFunctionCall _ _ (ExpValue _ _ function) (Just (AList _ _ args)) ->
+  ExpFunctionCall _ _ (ExpValue _ _ function) (AList _ _ args) ->
     transformEitherList intrinsicFunctionCall'
       $   eval' symTable
       .   argExtractExpr
