@@ -1,5 +1,5 @@
 name: fortran-vars
-version: 0.3.0
+version: 0.3.1
 synopsis: Fortran memory model and other static analysis tools.
 description: Various Fortran static analysis tools focusing on a memory model for Fortran types. Uses fortran-src for the syntax representation.
 category: Language
