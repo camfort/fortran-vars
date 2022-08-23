@@ -26,7 +26,7 @@ import Data.Int
 --
 -- Currently, it only resolves BOZ Constants in context of INTEGER.
 resolveBozConstant :: SymbolTable -> String -> ExpVal -> ExpVal
-resolveBozConstant symTable assignSymbol (Boz boz) = go boz
+resolveBozConstant symTable assignSymbol (Boz b) = go b
   where
     go boz = case entry of
       Just (SVariable (TInteger kind) _) ->

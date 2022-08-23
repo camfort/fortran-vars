@@ -1,58 +1,33 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DeriveAnyClass #-}
-{-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Language.Fortran.Vars.Types
   ( module Language.Fortran.Vars.Types
+  , Type
   , SemType(..)
   , CharacterLen(..)
   , Kind
+  , ExpVal(..)
   )
 where
 
-import           Language.Fortran.Extras.Encoding
-import           Language.Fortran.Vars.Orphans
-                                                ( )
+import           Language.Fortran.Vars.Orphans()
+import           Language.Fortran.Vars.Repr
 import           Data.Aeson                     ( FromJSON
                                                 , ToJSON
-                                                , ToJSONKey
-                                                , FromJSONKey
                                                 )
 import           Data.Data                      ( Data )
 import           Data.Map                       ( Map )
 import           Data.Typeable                  ( Typeable )
 import           GHC.Generics                   ( Generic )
-import           Control.DeepSeq                ( NFData )
 import           Language.Fortran.AST           ( Name
                                                 , ProgramUnitName
                                                 , Expression
                                                 )
-import qualified Language.Fortran.AST.Literal.Boz      as AST
 import           Language.Fortran.Util.Position ( SrcSpan(..)
                                                 , Position(..)
                                                 )
-import           Language.Fortran.Analysis.SemanticTypes
-                                                ( SemType(..)
-                                                , CharacterLen(..)
-                                                , Kind
-                                                )
-
-type Type = SemType
-
--- | The evaluated value of a FORTRAN expression
-data ExpVal
-  = Int     Int
-  | Real    Double
-  | Str     String
-  | Logical Bool
-  | Boz     AST.Boz
-  deriving (Eq, Ord, Show, Data, Typeable, Generic, NFData)
-
--- instance FromJSON AST.Conforming
--- instance ToJSON AST.Conforming
-instance FromJSON ExpVal
-instance ToJSON ExpVal
 
 -- | Memory offset given to a variable in memory
 type Offset = Int
@@ -131,12 +106,6 @@ type ProgramFileModel = Map ProgramUnitName ProgramUnitModel
 
 -- | Mapping from name of a program unit to relevant structure table
 type ProgramStructureTables = Map ProgramUnitName StructureTable
-
--- move these to common
-instance ToJSON ProgramUnitName
-instance ToJSONKey ProgramUnitName
-instance FromJSON ProgramUnitName
-instance FromJSONKey ProgramUnitName
 
 data TypeError
   = TypeError FilePath SrcSpan String

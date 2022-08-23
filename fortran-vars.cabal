@@ -36,6 +36,8 @@ library
       Language.Fortran.Vars.Equivalence
       Language.Fortran.Vars.Errors
       Language.Fortran.Vars.Eval
+      Language.Fortran.Vars.FSRepr.Eval
+      Language.Fortran.Vars.FSRepr.Translate
       Language.Fortran.Vars.Kind
       Language.Fortran.Vars.Memory
       Language.Fortran.Vars.MemoryLocation
@@ -43,6 +45,7 @@ library
       Language.Fortran.Vars.Orphans
       Language.Fortran.Vars.PureExpression
       Language.Fortran.Vars.Range
+      Language.Fortran.Vars.Repr
       Language.Fortran.Vars.StorageClass
       Language.Fortran.Vars.StructureTable
       Language.Fortran.Vars.SymbolTable
@@ -55,8 +58,36 @@ library
   hs-source-dirs:
       src
   default-extensions:
+      EmptyCase
       LambdaCase
+      InstanceSigs
+      BangPatterns
+      ExplicitNamespaces
+      DerivingStrategies
+      StandaloneDeriving
+      DeriveAnyClass
+      DeriveGeneric
+      DeriveDataTypeable
+      DeriveFunctor
+      DeriveFoldable
+      DeriveTraversable
+      DeriveLift
+      FlexibleContexts
+      FlexibleInstances
+      MultiParamTypeClasses
+      GADTs
+      PolyKinds
+      RoleAnnotations
+      RankNTypes
       TypeApplications
+      DefaultSignatures
+      TypeFamilies
+      DataKinds
+      MagicHash
+      BinaryLiterals
+      ScopedTypeVariables
+      TypeOperators
+  ghc-options: -Wall
   build-depends:
       aeson >=1.5.0.0
     , base >=4.7 && <5
@@ -77,9 +108,36 @@ executable fortran-vars
   hs-source-dirs:
       app
   default-extensions:
+      EmptyCase
       LambdaCase
+      InstanceSigs
+      BangPatterns
+      ExplicitNamespaces
+      DerivingStrategies
+      StandaloneDeriving
+      DeriveAnyClass
+      DeriveGeneric
+      DeriveDataTypeable
+      DeriveFunctor
+      DeriveFoldable
+      DeriveTraversable
+      DeriveLift
+      FlexibleContexts
+      FlexibleInstances
+      MultiParamTypeClasses
+      GADTs
+      PolyKinds
+      RoleAnnotations
+      RankNTypes
       TypeApplications
-  ghc-options: -threaded -rtsopts
+      DefaultSignatures
+      TypeFamilies
+      DataKinds
+      MagicHash
+      BinaryLiterals
+      ScopedTypeVariables
+      TypeOperators
+  ghc-options: -Wall -threaded -rtsopts
   build-depends:
       aeson >=1.5.0.0
     , base >=4.7 && <5
@@ -111,9 +169,36 @@ test-suite spec
   hs-source-dirs:
       test
   default-extensions:
+      EmptyCase
       LambdaCase
+      InstanceSigs
+      BangPatterns
+      ExplicitNamespaces
+      DerivingStrategies
+      StandaloneDeriving
+      DeriveAnyClass
+      DeriveGeneric
+      DeriveDataTypeable
+      DeriveFunctor
+      DeriveFoldable
+      DeriveTraversable
+      DeriveLift
+      FlexibleContexts
+      FlexibleInstances
+      MultiParamTypeClasses
+      GADTs
+      PolyKinds
+      RoleAnnotations
+      RankNTypes
       TypeApplications
-  ghc-options: -threaded -rtsopts
+      DefaultSignatures
+      TypeFamilies
+      DataKinds
+      MagicHash
+      BinaryLiterals
+      ScopedTypeVariables
+      TypeOperators
+  ghc-options: -Wall -threaded -rtsopts
   build-tool-depends:
       hspec-discover:hspec-discover
   build-depends:
