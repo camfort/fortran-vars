@@ -5,12 +5,16 @@
 
 packages:
 - completed:
-    hackage: fortran-src-0.10.2@sha256:9fd8af81f7c4ee9cd519cbf06cb0cab22f8ed5340ebd271fb5040613952e1703,9659
+    name: fortran-src
+    version: 0.10.2
+    git: https://github.com/camfort/fortran-src
     pantry-tree:
-      size: 9297
-      sha256: 698f610ca3154e06550a64dddb02c6bab764fbe57af34161788e9b9529e91aee
+      size: 12584
+      sha256: c4659f1c73154898ef85f77e5831e54f1545c6c4241e6cb4cb8710df25087d55
+    commit: b6a7f8e4de524c2a3bb5a771f16ff93f4e182511
   original:
-    hackage: fortran-src-0.10.2
+    git: https://github.com/camfort/fortran-src
+    commit: b6a7f8e4de524c2a3bb5a771f16ff93f4e182511
 - completed:
     hackage: fortran-src-extras-0.3.1@sha256:7501440ee806e4b566b4e420b9907cc8a6e97a459a80ec218a790ab0db61101b,4133
     pantry-tree:

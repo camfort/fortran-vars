@@ -19,7 +19,6 @@ import           Language.Fortran.AST           ( Expression(..)
                                                 , Value(..)
                                                 , AList(..)
                                                 , aStrip
-                                                , aStrip'
                                                 , Argument(..)
                                                 , argExprNormalize
                                                 , DoSpecification(..)

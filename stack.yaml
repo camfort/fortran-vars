@@ -4,6 +4,8 @@ packages:
 save-hackage-creds: false
 
 extra-deps:
-- fortran-src-0.10.2
+#- fortran-src-0.10.2
+- git: https://github.com/camfort/fortran-src
+  commit: b6a7f8e4de524c2a3bb5a771f16ff93f4e182511
 - fortran-src-extras-0.3.1
 - yaml-0.11.8.0
