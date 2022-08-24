@@ -7,7 +7,6 @@ module Language.Fortran.Vars.FSRepr.Translate where
 
 import Language.Fortran.Repr
 import Language.Fortran.Repr.Eval.Op
---import qualified Language.Fortran.Analysis.SemanticTypes as FV
 import qualified Language.Fortran.Vars.Repr as FV
 import GHC.Float ( float2Double )
 import qualified Data.Text as Text

@@ -46,6 +46,9 @@ library
       Language.Fortran.Vars.PureExpression
       Language.Fortran.Vars.Range
       Language.Fortran.Vars.Repr
+      Language.Fortran.Vars.ReprFS.Type
+      Language.Fortran.Vars.ReprFS.Value
+      Language.Fortran.Vars.ReprOld
       Language.Fortran.Vars.StorageClass
       Language.Fortran.Vars.StructureTable
       Language.Fortran.Vars.SymbolTable
