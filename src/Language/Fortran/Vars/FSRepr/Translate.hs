@@ -5,9 +5,11 @@
 
 module Language.Fortran.Vars.FSRepr.Translate where
 
-import Language.Fortran.Repr
-import Language.Fortran.Repr.Eval.Op
 import qualified Language.Fortran.Vars.Repr as FV
+import qualified Language.Fortran.AST.Literal.Boz as AST
+
+import Language.Fortran.Repr
+import Language.Fortran.Repr.Eval.Value.Op
 import GHC.Float ( float2Double )
 import qualified Data.Text as Text
 
@@ -54,3 +56,13 @@ translateFScalarValue = \case
   FSVComplex _fcomplex -> Left "ExpVal doesn't support complex values"
   FSVLogical (SomeFKinded fint) -> Right $ FV.Logical $ fLogicalToBool fint
   FSVString  (SomeFString (FString t)) -> Right $ FV.Str $ Text.unpack t
+
+--------------------------------------------------------------------------------
+
+translateExpVal :: FV.ExpVal -> FScalarValue
+translateExpVal = \case
+  FV.Int     i   -> FSVInt     $ SomeFKinded $ FInt4 $ fromIntegral i
+  FV.Real    r   -> FSVReal    $ SomeFKinded $ FReal8 r -- TODO
+  FV.Str     s   -> FSVString  $ someFString $ Text.pack s
+  FV.Logical b   -> FSVLogical $ SomeFKinded $ FInt4 $ fLogicalNumericFromBool b
+  FV.Boz     boz -> FSVInt     $ SomeFKinded $ FInt4 $ AST.bozAsTwosComp boz
