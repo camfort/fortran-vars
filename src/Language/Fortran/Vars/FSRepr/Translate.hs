@@ -9,7 +9,7 @@ import qualified Language.Fortran.Vars.Repr as FV
 import qualified Language.Fortran.AST.Literal.Boz as AST
 
 import Language.Fortran.Repr
-import Language.Fortran.Repr.Eval.Value.Op
+import Language.Fortran.Repr.Eval.Value.Op.Some
 import GHC.Float ( float2Double )
 import qualified Data.Text as Text
 
@@ -62,7 +62,13 @@ translateFScalarValue = \case
 translateExpVal :: FV.ExpVal -> FScalarValue
 translateExpVal = \case
   FV.Int     i   -> FSVInt     $ SomeFKinded $ FInt4 $ fromIntegral i
-  FV.Real    r   -> FSVReal    $ SomeFKinded $ FReal8 r -- TODO
+
+  -- TODO getting some precisions errors, fortran-src over-precise? unsure where
+  -- coming from, but need to compare using an epsilon
+  FV.Real    r   -> FSVReal    $ SomeFKinded $ FReal8 r
+
   FV.Str     s   -> FSVString  $ someFString $ Text.pack s
   FV.Logical b   -> FSVLogical $ SomeFKinded $ FInt4 $ fLogicalNumericFromBool b
-  FV.Boz     boz -> FSVInt     $ SomeFKinded $ FInt4 $ AST.bozAsTwosComp boz
+
+  -- TODO fortran-vars always converts BOZs at INTEGER(2)
+  FV.Boz     boz -> FSVInt     $ SomeFKinded $ FInt2 $ AST.bozAsTwosComp boz
