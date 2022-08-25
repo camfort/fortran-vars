@@ -89,9 +89,15 @@ instance FSEval.MonadEval (ExceptT FSEval.Error (Reader SymbolTable)) where
         symt <- ask
         case Map.lookup name symt of
           Nothing -> return Nothing
-          Just (SParameter _ val) ->
-            return $ Just $ FS.MkFScalarValue $ translateExpVal val
-          _ -> error "TODO"
+          Just entry ->
+            case entry of
+              SParameter _ val ->
+                return $ Just $ FS.MkFScalarValue $ translateExpVal val
+              _ -> do
+                FSEval.warn $
+                    "found variable in SymbolTable, but wasn't an SParameter: "
+                    <>name
+                return Nothing
 
     -- | Ignore warnings. fortran-vars doesn't have a method to report warnings
     --   during evaluation.
