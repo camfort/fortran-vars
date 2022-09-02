@@ -36,7 +36,9 @@ import           Language.Fortran.Vars.Eval     ( eval
                                                 , eval'
                                                 )
 import           Language.Fortran.Vars.BozConstant
-                                                ( resolveBozConstant )
+                                                ( resolveBozConstant
+                                                , bozToInt
+                                                )
 import           Language.Fortran.Vars.Types    ( ExpVal(..)
                                                 , SymbolTableEntry(..)
                                                 , Type
@@ -83,6 +85,18 @@ handleParameter
   :: Data a => SymbolTable -> AList Declarator (Analysis a) -> SymbolTable
 handleParameter symTable alist = foldl' f symTable (aStrip alist)
  where
+  -- special case: immediate BOZ constant
+  f symt (Declarator _ _ varExp ScalarDecl _ (Just (ExpValue _ _ (ValBoz boz)))) =
+      let symbol = srcName varExp
+       in case M.lookup symbol symt of
+            Nothing -> symt
+            Just (SVariable ty _) -> case ty of
+              TInteger kind ->
+                let val = bozToInt kind boz
+                 in M.insert symbol (SParameter ty val) symt
+              _ -> symt -- unhandled BOZ coercion
+            Just _ -> symt -- unhandled BOZ usage
+
   f symt (Declarator _ _ varExp ScalarDecl _ (Just valExp)) =
     let symbol = srcName varExp
         val'   = case eval symt valExp of
