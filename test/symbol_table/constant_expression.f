@@ -7,8 +7,10 @@ c     parameter statement first, declaration later
       integer b
 
 c     declaration first, parameter statement later
-      real r 
-      parameter (r = 3.14)
+c     2022-09-02 raehik: upgraded to REAL(8) to avoid 4->8 conversion losing
+c     accuracy, since ExpVal uses Double=>REAL(8))
+      real*8 r 
+      parameter (r = 3.14D0)
 
 c     integer arithmetics with variable
       integer c 
@@ -21,12 +23,14 @@ c     integer arithmetics with variable
       parameter (d6 = +c ) 
 
 c     float arithmetics with variable
-      real pi 
-      parameter (pi = 3.14)
+c     2022-09-02 raehik: upgraded to REAL(8) to avoid 4->8 conversion losing
+c     accuracy, since ExpVal uses Double=>REAL(8))
+      real*8 pi 
+      parameter (pi = 3.14D0)
       parameter (e1 = pi + pi) 
       parameter (e2 = pi - pi) 
-      parameter (e3 = pi * 2.0) 
-      parameter (e4 = pi / 2.0) 
+      parameter (e3 = pi * 2.0D0) 
+      parameter (e4 = pi / 2.0D0) 
       parameter (e5 = -pi) 
       parameter (e6 = +pi) 
 
@@ -51,7 +55,7 @@ c     intrinsics
 
       parameter (d8 = max(50,60))
       parameter (d9 = max(40,50,60,70))
-      parameter (e7 = max(1.2,1.1))
+      parameter (e7 = max(1.2D0,1.1D0))
       parameter (e8 = max(1.2,2))
 
       character*1 c1

@@ -5,33 +5,29 @@
 
 packages:
 - completed:
-    name: fortran-src
-    version: 0.10.2
-    git: https://github.com/camfort/fortran-src
+    hackage: fortran-src-0.12.0@sha256:9697274dc335ae5b24172162ef8fc54437e57f148c10eb593e72293c0587f586,12430
     pantry-tree:
-      size: 12664
-      sha256: d9dd8442ed771da94ce37d68f0ea18fe8dc39d1eeaad9d662dd1bf6db70fff6b
-    commit: 1251b4ecc3259fd0ec16a38b2fcf17b062452b81
+      sha256: 7049821d0f5fe8fcad5346c5577f6a33365dc961af67bf9ad671ae310ebf5e35
+      size: 12382
   original:
-    git: https://github.com/camfort/fortran-src
-    commit: 1251b4ecc3259fd0ec16a38b2fcf17b062452b81
+    hackage: fortran-src-0.12.0
 - completed:
-    hackage: fortran-src-extras-0.3.1@sha256:7501440ee806e4b566b4e420b9907cc8a6e97a459a80ec218a790ab0db61101b,4133
+    hackage: fortran-src-extras-0.4.0@sha256:daebf968318fb3f03ab15931aefc4228fc94287181fced043b1e2a49e6fcf4a7,4245
     pantry-tree:
+      sha256: c97878662f8344ec29c93abdd77ee1bd5333ba71500bf5b2b43094c1745d389a
       size: 1513
-      sha256: b464c449fb8b5f0f0b59d745bd3fcd6d4152522178fc7ef718440c4fcd63fb53
   original:
-    hackage: fortran-src-extras-0.3.1
+    hackage: fortran-src-extras-0.4.0
 - completed:
     hackage: yaml-0.11.8.0@sha256:049261f85bdcaf06e5298709edcfd0337fe706683b3631a81dc49aa4a18ba1a5,4936
     pantry-tree:
-      size: 2044
       sha256: 7f32163524a27865c85074a9e17011879e9e17ae342e0a35c0dd883df381fe2e
+      size: 2044
   original:
     hackage: yaml-0.11.8.0
 snapshots:
 - completed:
+    sha256: be747117bed6d462806c883352c3206325b23480825103f5c87884e97e52819a
     size: 619173
     url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/19/20.yaml
-    sha256: be747117bed6d462806c883352c3206325b23480825103f5c87884e97e52819a
   original: lts-19.20

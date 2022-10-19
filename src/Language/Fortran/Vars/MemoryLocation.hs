@@ -29,7 +29,9 @@ import           Language.Fortran.Vars.Types    ( SymbolTableEntry(..)
                                                 , Offset
                                                 , SymbolTable
                                                 )
-
+import           Language.Fortran.Analysis.SemanticTypes
+                                                ( dimensionsToTuples
+                                                )
 
 isIxSingle :: Index a -> Bool
 isIxSingle IxSingle{} = True
@@ -79,20 +81,25 @@ calculateOffset symTable symbol indices@(IxSingle{} : _) =
   let Just entry = M.lookup symbol symTable
   in
     case entry of
-      SVariable (TArray ty (Just dims)) _ ->
-        let
-          ixSingles    = takeWhile isIxSingle indices
-          Just kind    = getTypeKind ty
-          arrayIndices = either (const Nothing) Just
-            $ traverse toIndices ixSingles
-           where
-            toIndices (IxSingle _ _ _ expr) = toInt <$> eval' symTable expr
-            toIndices _ = error "toIndices: unexpected input"
-        in
-          (\x -> linearizedIndex x dims * kind) <$> arrayIndices
+      SVariable (TArray ty dims) _ ->
+        case dimensionsToTuples dims of
+          Nothing -> error "expected a static array, got dynamic"
+          Just dims' ->
+            let
+              ixSingles    = takeWhile isIxSingle indices
+              Just kind    = getTypeKind ty
+              arrayIndices = either (const Nothing) Just
+                $ traverse toIndices ixSingles
+               where
+                toIndices (IxSingle _ _ _ expr) = toInt <$> eval' symTable expr
+                toIndices _ = error "toIndices: unexpected input"
+            in
+              (\x -> linearizedIndex x dims' * kind) <$> arrayIndices
       _ -> error "Only array-typed VariableEntries are expected at this point"
+
 -- substring c(:5)
 calculateOffset _ _ (IxRange _ _ Nothing _ _ : _) = Just 0
+
 -- substring c(5:)
 calculateOffset symTable _ (IxRange _ _ (Just lowerIndex) _ _ : _) =
   let val = eval' symTable lowerIndex

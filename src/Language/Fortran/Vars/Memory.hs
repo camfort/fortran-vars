@@ -39,6 +39,8 @@ import           Language.Fortran.Vars.Types    ( SymbolTableEntry(..)
                                                 )
 import           Language.Fortran.Vars.Kind     ( getTypeKind )
 import           Language.Fortran.Vars.Union    ( union )
+import           Language.Fortran.Analysis.SemanticTypes
+                                                ( dimensionsToTuples )
 
 -- | Given a 'SymbolTable' and an 'Expression', return the size of
 -- the variable represented by the expression
@@ -55,13 +57,16 @@ getSize symTable expr =
         _              -> error (symbol ++ " is not a VariableEntry.")
 
 getTypeSize :: Type -> Int
-getTypeSize = \case
-  TArray ty dims ->
-    fromMaybe (error "Can't calculate size of dynamic array")
-      $   sizeOfStaticArray
-      <$> getTypeKind ty
-      <*> dims
-  ty -> fromMaybe (error "Can't get size of dynamic variable") $ getTypeKind ty
+getTypeSize =
+    fromMaybe (error "Can't get size of dynamic variable") . getTypeSize'
+
+getTypeSize' :: Type -> Maybe Int
+getTypeSize' = \case
+  TArray ty dims -> do
+    dims' <- dimensionsToTuples dims
+    kind <- getTypeKind ty
+    pure $ sizeOfStaticArray kind dims'
+  ty -> getTypeKind ty
 
 -- | Given a static array's 'kind' and 'dimension', calculate its size
 sizeOfStaticArray :: Int -> [(Int, Int)] -> Int
@@ -78,12 +83,10 @@ allocateMemoryBlocks = M.foldlWithKey f M.empty
   f :: StorageTable -> Name -> SymbolTableEntry -> StorageTable
   f storageTable symbol entry = case entry of
     SVariable ty _ ->
-      let size = case ty of
-            TArray ty' dims -> sizeOfStaticArray <$> getTypeKind ty' <*> dims
-            _               -> getTypeKind ty
+      let mSize = getTypeSize' ty
           block = MemoryBlock
-            { blockSize    = size
-            , storageClass = case size of
+            { blockSize    = mSize
+            , storageClass = case mSize of
                                Nothing -> Automatic
                                _       -> Unspecified
             , variables    = [symbol]

@@ -1,6 +1,6 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.34.4.
+-- This file has been generated from package.yaml by hpack version 0.35.0.
 --
 -- see: https://github.com/sol/hpack
 
@@ -98,8 +98,8 @@ library
     , containers >=0.5.7.1
     , deepseq >=1.4.4.0
     , fgl >=5
-    , fortran-src >=0.10.2 && <0.11
-    , fortran-src-extras >=0.3.1 && <0.4
+    , fortran-src >=0.10.2 && <0.13
+    , fortran-src-extras >=0.4.0 && <0.5
     , mtl
     , text >=1.2.2.2
     , uniplate >=1.6.10
@@ -149,8 +149,8 @@ executable fortran-vars
     , containers >=0.5.7.1
     , deepseq >=1.4.4.0
     , fgl >=5
-    , fortran-src >=0.10.2 && <0.11
-    , fortran-src-extras >=0.3.1 && <0.4
+    , fortran-src >=0.10.2 && <0.13
+    , fortran-src-extras >=0.4.0 && <0.5
     , fortran-vars
     , mtl
     , text >=1.2.2.2
@@ -214,8 +214,8 @@ test-suite spec
     , containers >=0.5.7.1
     , deepseq >=1.4.4.0
     , fgl >=5
-    , fortran-src >=0.10.2 && <0.11
-    , fortran-src-extras >=0.3.1 && <0.4
+    , fortran-src >=0.10.2 && <0.13
+    , fortran-src-extras >=0.4.0 && <0.5
     , fortran-vars
     , hspec
     , mtl

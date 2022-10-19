@@ -14,6 +14,8 @@ instance   ToJSON SemType
 instance FromJSON SemType
 instance   ToJSON CharacterLen
 instance FromJSON CharacterLen
+instance   ToJSON Dimensions
+instance FromJSON Dimensions
 
 instance FromJSON SrcSpan
 instance FromJSON Position

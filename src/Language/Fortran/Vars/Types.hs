@@ -6,6 +6,7 @@ module Language.Fortran.Vars.Types
   ( module Language.Fortran.Vars.Types
   , Type
   , SemType(..)
+  , Dimensions(..)
   , CharacterLen(..)
   , Kind
   , ExpVal(..)
@@ -50,10 +51,6 @@ data StorageClass
 
 instance FromJSON StorageClass
 instance ToJSON StorageClass
-
--- | The declared dimensions of a staticically typed array variable
--- type is of the form [(dim1_lower, dim1_upper), (dim2_lower, dim2_upper)]
-type Dimensions = [(Int, Int)]
 
 -- | An entry in the 'SymbolTable' for some variable
 data SymbolTableEntry

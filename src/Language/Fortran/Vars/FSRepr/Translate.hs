@@ -30,15 +30,16 @@ translateFScalarType = \case
 
 translateFArrayType :: FArrayType -> FV.SemType
 translateFArrayType (FArrayType fsty shape) =
-    FV.TArray (translateFScalarType fsty) (Just (translateShape shape))
+    FV.TArray (translateFScalarType fsty) (translateShape shape)
 
 translateFKind :: FKindTerm -> FV.Kind
 translateFKind = fromIntegral
 
 -- | Note that Fortran defaults to 1-indexed arrays.
 translateShape :: Shape -> FV.Dimensions
-translateShape = map (\n -> (defaultArrayStartIndex, translateFKind n)) . getShape
+translateShape = foldr go FV.DimensionsEnd . getShape
   where
+    go n dims = FV.DimensionsCons (defaultArrayStartIndex, translateFKind n) dims
     -- TODO add to fortran-src somewhere
     defaultArrayStartIndex = 1
 
@@ -51,7 +52,7 @@ translateFValue = \case
 
 translateFScalarValue :: FScalarValue -> Either String FV.ExpVal
 translateFScalarValue = \case
-  FSVInt     fint      -> Right $ FV.Int  $ someFIntUOp  fromIntegral fint
+  FSVInt     fint      -> Right $ FV.Int  $ someFIntUOp fromIntegral fint
   FSVReal    freal     -> Right $ FV.Real $ someFRealUOp' float2Double id freal
   FSVComplex _fcomplex -> Left "ExpVal doesn't support complex values"
   FSVLogical (SomeFKinded fint) -> Right $ FV.Logical $ fLogicalToBool fint
