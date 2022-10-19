@@ -296,9 +296,9 @@ upgradeScalarToArray symbol dimDecls symTable =
         <> " is array-typed variable."
         <> " Invalid fortran syntax (Duplicate DIMENSION attribute)"
     Just (SVariable ty loc) ->
-      let mdims = traverse (resolveDimensionDimensionDeclarator symTable)
-                           (aStrip dimDecls)
-          entry = SVariable (TArray ty mdims) loc
+      let dims = undefined
+      -- traverse (resolveDimensionDimensionDeclarator symTable) (aStrip dimDecls)
+          entry = SVariable (TArray ty dims) loc
       in  M.insert symbol entry symTable
     _ -> symTable
 

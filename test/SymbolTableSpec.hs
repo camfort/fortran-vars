@@ -157,7 +157,9 @@ spec = do
       valueOf "d8" symTable `shouldBe` Int 60
       valueOf "d9" symTable `shouldBe` Int 70
       valueOf "e7" symTable `shouldBe` Real 1.2
-      valueOf "e8" symTable `shouldBe` Real 2
+      -- TODO: below is disallowed by gfortran and spec (F2018 16.9.125)
+      -- parameter (e8 = max(1.2,2))
+      --valueOf "e8" symTable `shouldBe` Real 2
       valueOf "c1" symTable `shouldBe` Str "A"
       valueOf "eol" symTable `shouldBe` Str "\r\n"
       valueOf "i1" symTable `shouldBe` Int (-2)

@@ -17,7 +17,6 @@ jobs:
     runs-on: ubuntu-latest
     name: Ubuntu / Stack / test
     steps:
-
     - uses: actions/checkout@v2
 
     # relative paths are relative to the project directory
@@ -51,13 +50,15 @@ jobs:
   ubuntu-cabal-test:
     runs-on: ubuntu-latest
     name: Ubuntu / GHC ${{ matrix.ghc }}, Cabal / test
+
     strategy:
-      fail-fast: false  # don't stop if one job (= GHC version) fails
+      fail-fast: false      # don't stop if one job (= GHC version) fails
       matrix:
-        cabal: ["3.6"]  # ghcup recommended as of 2021-12-02
+        cabal: [latest]
         ghc:
-        - "8.6"
-        - "9.0"
+        - "9.0.2"
+        - "9.2.4"
+        - "9.4.2"
 
     steps:
 
@@ -74,7 +75,6 @@ jobs:
     - name: Set all tracked file modification times to the time of their last commit
       run: |
         rev=HEAD
-        IFS=$'\n'
         for f in $(git ls-tree -r -t --full-name --name-only "$rev") ; do
             touch -d $(git log --pretty=format:%cI -1 "$rev" -- "$f") "$f";
         done
@@ -107,11 +107,10 @@ jobs:
     runs-on: macos-latest
     name: Mac / GHC ${{ matrix.ghc }}, Cabal / test
     strategy:
-      fail-fast: false  # don't stop if one job (= GHC version) fails
+      fail-fast: false      # don't stop if one job (= GHC version) fails
       matrix:
-        cabal: ["3.6"]  # ghcup recommended as of 2021-12-02
-        ghc: ["9.0"]
-
+        cabal: [latest]
+        ghc: ["9.2"]
     steps:
 
     # TODO figure out timestamp fixer on Mac (no Mac available to test)
@@ -153,21 +152,17 @@ jobs:
         name: ${{ env.EXE_NAME }}-macos-ghc-${{ matrix.ghc }}-cabal-${{ github.sha }}
         if-no-files-found: error
 
-  windows-cabal-build:
+  windows-cabal-test:
     runs-on: windows-latest
     name: Windows / GHC ${{ matrix.ghc }}, Cabal / test
     strategy:
-      fail-fast: false  # don't stop if one job (= GHC version) fails
+      fail-fast: false      # don't stop if one job (= GHC version) fails
       matrix:
-        cabal: ["3.6"]  # ghcup recommended as of 2021-12-02
-        ghc: ["9.0"]
-
+        cabal: [latest]
+        ghc: ["9.2"]
     steps:
-
-    # TODO can't do cache fixer on Windows b/c it's a Bash script...
+    # TODO figure out timestamp fixer on Windows (need Bash)
     - uses: actions/checkout@v2
-      with:
-        fetch-depth: 0
 
     - name: Setup Haskell build environment
       id: setup-haskell-build-env
