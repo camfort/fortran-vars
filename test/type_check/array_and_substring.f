@@ -4,6 +4,7 @@
       integer N
       integer c(N)        ! adjustable
       integer d(10, *)    ! assumed-size
+      integer*2 e(10, 10)
 
 C     test the types of RHS expressions
       arr1 = a(1)
@@ -16,6 +17,7 @@ c     test ranges
       i1   = a(3:5)
       i2   = a(1:1)
       i3   = c(3:)
+      i4   = e(5:, 2)
 
 c     test erroneous expressions where we have too many indices
       err1 = a(2, 3)
