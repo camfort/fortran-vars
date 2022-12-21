@@ -211,11 +211,11 @@ getArrayMemory symTable memTables name indices =
           | otherwise
           -> do
             let is = map unsafeStripIndexCP idxCPValues
-            range <- generateLinearizedIndexRange is start <$> dims <*> kind
+            range <- generateLinearizedIndexRange is start <$> pure dims <*> kind
             Just $ ConstantIndices (memBlockName, range)
          where
           kind       = getTypeKind ty
-          size       = sizeOfArray <$> kind <*> dims
+          size       = sizeOfArray <$> kind <*> pure dims
           arrayRange = (\x -> (start, start + x - 1)) <$> size
         SVariable ty (memBlockName, start)
           | null indices -> ConstantIndices . (memBlockName, ) <$> range
@@ -558,7 +558,13 @@ label
 label = insLabel . getAnnotation
 
 -- | Given kind and dimensions, calculate the size of an array
-sizeOfArray :: Int -> [(Int, Int)] -> Int
+sizeOfArray :: Int -> Dimensions -> Int
 sizeOfArray kind dimension =
-  let arraySize = foldl (\acc (l, h) -> acc * (h - l + 1)) 1 dimension
+  let arraySize = foldl (\acc (l, h) -> acc * (h - l + 1)) 1 (dimensionsToTuples' dimension)
   in  kind * arraySize
+
+dimensionsToTuples' :: Dimensions -> [(Int, Int)]
+dimensionsToTuples' dims =
+    case dimensionsToTuples dims of
+      Nothing    -> []
+      Just dims' -> dims'

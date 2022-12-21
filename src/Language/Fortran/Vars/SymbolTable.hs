@@ -10,7 +10,7 @@ import           Data.Data                      ( Data
                                                 )
 import           Data.List                      ( foldl' )
 import qualified Data.Map                      as M
-import           Data.Maybe                     ( mapMaybe )
+import           Data.Maybe                     ( mapMaybe, fromMaybe )
 
 import           Language.Fortran.Analysis      ( Analysis
                                                 , srcName
@@ -45,6 +45,7 @@ import           Language.Fortran.Vars.Types    ( ExpVal(..)
                                                 , SemType(..)
                                                 , CharacterLen(..)
                                                 , SymbolTable
+                                                , Dimensions(..)
                                                 )
 import           Language.Fortran.Vars.Utils    ( typeSpecToScalarType
                                                 , typeSpecToArrayType
@@ -202,15 +203,14 @@ handleDeclaration symTable typespec decls = foldl' f symTable (aStrip decls)
       symbol = srcName varExp
       entry  = case charLength of
         Just (ExpValue _ _ ValStar) ->
-          SVariable (TArray (TCharacter CharLenStar 1) Nothing) (symbol, 0)
+          SVariable (TArray (TCharacter CharLenStar 1) DimensionsFinalStar) (symbol, 0)
         _ ->
-          let
-            kd   = getKind symt typespec charLength
-            dims = traverse (resolveDimensionDimensionDeclarator symt)
-                            (aStrip dimDecls)
-            ty = setTypeKind (baseToType bt) kd
-          in
-            SVariable (TArray ty dims) (symbol, 0)
+          case resolveDims symt (aStrip dimDecls) of
+            Nothing -> error "unsupported dimension declarators: probably skip instead of erroring"
+            Just dims ->
+              let kd = getKind symt typespec charLength
+                  ty = setTypeKind (baseToType bt) kd
+              in  SVariable (TArray ty dims) (symbol, 0)
     in
       M.insert symbol entry symt
 
@@ -232,20 +232,22 @@ handleArrayDecl
   -> [DimensionDeclarator (Analysis a)]
   -> SymbolTable
 handleArrayDecl symTable varExp dimDecls =
-  let symbol = srcName varExp
-      dims   = traverse (resolveDimensionDimensionDeclarator symTable) dimDecls
-  in  case M.lookup symbol symTable of
-        Just (SVariable TArray{} _) ->
-          error "invalid declarator: duplicate array declarations"
-        Just (SVariable ty loc) ->
-          let ste = SVariable (TArray ty dims) loc
-          in  M.insert symbol ste symTable
-        Just var -> error $ "Invalid declarator: " <> show var
-        Nothing -> -- add array info, use a placeholder for scalar type
-          let ste =
-                  SVariable (TArray placeholderIntrinsicType dims) (symbol, 0)
-          in  M.insert symbol ste symTable
-  where placeholderIntrinsicType = TInteger 4
+  case resolveDims symTable dimDecls of
+    Nothing -> error "unsupported dimension declarators: probably skip instead of erroring"
+    Just dims ->
+      let symbol = srcName varExp
+      in  case M.lookup symbol symTable of
+            Just (SVariable TArray{} _) ->
+              error "invalid declarator: duplicate array declarations"
+            Just (SVariable ty loc) ->
+              let ste = SVariable (TArray ty dims) loc
+              in  M.insert symbol ste symTable
+            Just var -> error $ "Invalid declarator: " <> show var
+            Nothing -> -- add array info, use a placeholder for scalar type
+              let ste =
+                      SVariable (TArray placeholderIntrinsicType dims) (symbol, 0)
+              in  M.insert symbol ste symTable
+      where placeholderIntrinsicType = TInteger 4
 
 -- | Given a 'SymbolTable' and a 'Statement' found in a 'ProgramUnit', return a new 'SymbolTable'
 -- with any newly defined symbols
@@ -359,3 +361,61 @@ collectSymbols :: Data a => ProgramUnit (Analysis a) -> SymbolTable
 collectSymbols pu =
   let puSignatureSymbols = puSymbols False M.empty pu
   in  foldl' blSymbols puSignatureSymbols $ programUnitBody pu
+
+-- lower bound always defaults to 1
+data Dimension
+  = DimensionDynamic (Maybe Int)
+  -- ^ dynamic dimension: no upper bound, optional lower bound
+
+  | DimensionStatic  (Maybe Int) Int
+  -- ^ static dimension: known upper bound, optional lower bound
+
+coerceDimensionList :: [Dimension] -> Maybe Dimensions
+coerceDimensionList = const Nothing -- TODO
+
+-- | Evaluate array dimension information.
+--
+-- There are essentially three possible return values:
+--
+--   * static-size array, where all dimensions are fully defined
+--   * assumed-size array, where final dimension is dynamic
+--   * other (e.g. assumed-shape, unsupported), all information discarded
+resolveDims
+  :: SymbolTable -> [DimensionDeclarator a] -> Maybe Dimensions
+resolveDims symt =
+    coerceDimensionList . fromMaybe [] . sequence . map (resolveDim symt)
+
+-- `Nothing` means totally invalid.
+resolveDim
+  :: SymbolTable -> DimensionDeclarator a -> Maybe Dimension
+resolveDim symt (DimensionDeclarator _ _ lb ub) =
+    case ub of
+      Just (ExpValue _ _ ValStar) -> do
+        -- final dimension is @*@: assumed-size
+        -- note that we can't represent a lower bound here due to the data
+        -- type. oops. TODO
+        pure $ DimensionDynamic mlbv
+      _ -> do
+        case ub of
+          Nothing -> Nothing
+          Just jub -> do
+            ubv <- resolveDimBound symt jub
+            pure $ DimensionStatic  mlbv ubv
+  where
+    mlbv = case lb of Nothing -> Nothing; Just jlb -> resolveDimBound symt jlb
+
+-- note that we don't handle @*@ here. do that manually, for the last dimension
+-- (and only for the upper bound -- TODO I think? check standard). if it's not
+-- the last dimension, it's not an assumed-size array and so we can throw
+-- everything out
+resolveDimBound
+  :: SymbolTable -> Expression a -> Maybe Int
+resolveDimBound symt = \case
+  ExpValue _ _ (ValVariable name) ->
+    case M.lookup name symt of
+      Just (SParameter _ (Int i)) -> Just i
+      _                           -> Nothing
+  e ->
+    case eval' symt e of
+      Right (Int i) -> Just i
+      _             -> Nothing
