@@ -4,7 +4,7 @@ module Language.Fortran.Vars.Repr
   , F.CharacterLen(..)
   , ExpVal(..)
   , F.Kind
-  , F.Dimensions(..)
+  , F.Dimensions(..), F.dimensionsToTuples
   ) where
 
 import qualified Language.Fortran.Analysis.SemanticTypes as F

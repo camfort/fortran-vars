@@ -6,7 +6,7 @@ module Language.Fortran.Vars.Types
   ( module Language.Fortran.Vars.Types
   , Type
   , SemType(..)
-  , Dimensions(..)
+  , Dimensions(..), dimensionsToTuples
   , CharacterLen(..)
   , Kind
   , ExpVal(..)

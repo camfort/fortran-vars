@@ -19,9 +19,9 @@ packages:
   original:
     hackage: fortran-src-extras-0.4.0
 - completed:
-    hackage: yaml-0.11.8.0@sha256:049261f85bdcaf06e5298709edcfd0337fe706683b3631a81dc49aa4a18ba1a5,4936
+    hackage: yaml-0.11.8.0@sha256:3448c6bbac232c73e5a6326634699c03a1f949f9981b9ab2dc008d36aa2c3db6,5177
     pantry-tree:
-      sha256: 7f32163524a27865c85074a9e17011879e9e17ae342e0a35c0dd883df381fe2e
+      sha256: 294e3960c62d9db13fd6559ab375e5215bf5e206802c40f702f3164f5c6537a9
       size: 2044
   original:
     hackage: yaml-0.11.8.0

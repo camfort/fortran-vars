@@ -58,9 +58,9 @@ linearizedIndex indices dimensions =
 
 -- | Given only single indices return the 'Range' in memory that
 -- these indices point to.
-generateLinearizedIndexRange :: [Int] -> Int -> [(Int, Int)] -> Int -> Range
+generateLinearizedIndexRange :: [Int] -> Int -> Dimensions -> Int -> Range
 generateLinearizedIndexRange intIndices start dims kind =
-  let offset = linearizedIndex intIndices dims * kind
+  let offset = linearizedIndex intIndices (dimensionsToTuples' dims) * kind
   in  (start + offset, start + offset + kind - 1)
 
 findBlockOffset :: SymbolTable -> Name -> Offset -> Location
