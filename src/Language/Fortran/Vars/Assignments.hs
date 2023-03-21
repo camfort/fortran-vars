@@ -32,7 +32,8 @@ import           Language.Fortran.Vars.SymbolTable
 import           Language.Fortran.Vars.Types    ( SymbolTable
                                                 , StructureTable
                                                 , SymbolTableEntry(..)
-                                                , Dimensions
+                                                , Dims(..)
+                                                , Dim(..)
                                                 , Type
                                                 , SemType(..)
                                                 , TypeError(..)
@@ -102,7 +103,7 @@ declarators strt symt = concatMap f where
     pure $ (, e) <$> typeOf strt symt v
   f d@(Declarator _ _ (ExpValue _ s (ValVariable v)) ArrayDecl{} _ (Just (ExpInitialisation _ _ vals)))
     = case M.lookup v symt of
-      Just (SVariable (TArray ty (Just dims)) _) ->
+      Just (SVariable (TArray ty (DimsExplicitShape dims)) _) ->
         let tys   = expandDimensions dims ty
             vals' = aStrip vals
         in  if length tys /= length vals'
@@ -132,7 +133,7 @@ expandArrays
   -> [Either TypeError Type]
 expandArrays strt symt e = case e of
   ExpValue _ _ (ValVariable var) -> case M.lookup var symt of
-    Just (SVariable (TArray ty (Just dims)) _) ->
+    Just (SVariable (TArray ty (DimsExplicitShape dims)) _) ->
       expandDimensions dims (Right ty)
     Just (SVariable ty _) -> [Right ty]
     _ ->
@@ -145,6 +146,6 @@ expandArrays strt symt e = case e of
 
 -- | Function to expand dimensions into appropriate number of types for use in
 -- other expand functions
-expandDimensions :: Dimensions -> a -> [a]
+expandDimensions :: Foldable t => t (Dim Int) -> a -> [a]
 expandDimensions dims =
-  replicate (foldl' (\acc (x, y) -> abs (y - x + 1) * acc) 1 dims)
+  replicate (foldl' (\acc (Dim lb ub) -> abs (ub - lb + 1) * acc) 1 dims)

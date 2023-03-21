@@ -12,6 +12,7 @@ import           Prelude                 hiding ( GT
                                                 , EQ
                                                 , LT
                                                 )
+import           Data.List.NonEmpty             ( NonEmpty( (:|) ) )
 import qualified Data.Map                      as M
 import           Data.Data                      ( toConstr )
 import           Data.Maybe                     ( fromJust )
@@ -57,6 +58,8 @@ import           Language.Fortran.Vars.Types    ( SymbolTableEntry(..)
                                                 , TypeError(..)
                                                 , TypeOf
                                                 , typeError
+                                                , Dim(..)
+                                                , Dims(..)
                                                 )
 import           Language.Fortran.Vars.Kind     ( getTypeKind
                                                 , setTypeKind
@@ -102,9 +105,11 @@ typeOf strTable symTable expr = case expr of
     dim <- specToDim symTable doSpec
     ty  <- typeOf strTable symTable . head $ aStrip es
     pure $ case ty of
-      TArray ty' (Just [(1, dim')]) -> TArray ty' (Just [(1, dim * dim')])
+      TArray ty' (DimsExplicitShape (Dim 1 dim' :| [])) ->
+        TArray ty' $ DimsExplicitShape $ Dim 1 (dim * dim') :| []
       TArray _ _ -> error "Unexpected array type in implied do"
-      _ -> TArray ty (Just [(1, dim)])
+      _ ->
+        TArray ty  $ DimsExplicitShape $ Dim 1 dim :| []
 
   ExpDataRef _ _ es (ExpValue _ _ (ValVariable name)) -> do
     ty <- typeOf strTable symTable es

@@ -9,9 +9,11 @@ import qualified Language.Fortran.Vars.Repr as FV
 import qualified Language.Fortran.AST.Literal.Boz as AST
 
 import Language.Fortran.Repr
-import Language.Fortran.Repr.Eval.Value.Op.Some
+import Language.Fortran.Repr.Type.Array
+
 import GHC.Float ( float2Double )
 import qualified Data.Text as Text
+import qualified Data.List.NonEmpty as NonEmpty
 
 translateFType :: FType -> FV.SemType
 translateFType = \case
@@ -32,44 +34,40 @@ translateFArrayType :: FArrayType -> FV.SemType
 translateFArrayType (FArrayType fsty shape) =
     FV.TArray (translateFScalarType fsty) (translateShape shape)
 
-translateFKind :: FKindTerm -> FV.Kind
+translateFKind :: FKindLit -> FV.Kind
 translateFKind = fromIntegral
 
 -- | Note that Fortran defaults to 1-indexed arrays.
 translateShape :: Shape -> FV.Dimensions
-translateShape = foldr go FV.DimensionsEnd . getShape
-  where
-    go n dims = FV.DimensionsCons (defaultArrayStartIndex, translateFKind n) dims
-    -- TODO add to fortran-src somewhere
-    defaultArrayStartIndex = 1
+translateShape =
+    FV.DimsExplicitShape . NonEmpty.fromList . map (\ub -> FV.Dim 1 (fromIntegral ub)) . getShape
 
 --------------------------------------------------------------------------------
 
 translateFValue :: FValue -> Either String FV.ExpVal
 translateFValue = \case
   MkFScalarValue fsv  -> translateFScalarValue fsv
-  MkFArrayValue  _fav -> Left "ExpVal doesn't support array values"
 
 translateFScalarValue :: FScalarValue -> Either String FV.ExpVal
 translateFScalarValue = \case
-  FSVInt     fint      -> Right $ FV.Int  $ someFIntUOp fromIntegral fint
-  FSVReal    freal     -> Right $ FV.Real $ someFRealUOp' float2Double id freal
+  FSVInt     fint      -> Right $ FV.Int  $ fIntUOp fromIntegral fint
+  FSVReal    freal     -> Right $ FV.Real $ fRealUOp' float2Double id freal
   FSVComplex _fcomplex -> Left "ExpVal doesn't support complex values"
-  FSVLogical (SomeFKinded fint) -> Right $ FV.Logical $ fLogicalToBool fint
-  FSVString  (SomeFString (FString t)) -> Right $ FV.Str $ Text.unpack t
+  FSVLogical fint -> Right $ FV.Logical $ fLogicalToBool fint
+  FSVString  t -> Right $ FV.Str $ Text.unpack t
 
 --------------------------------------------------------------------------------
 
 translateExpVal :: FV.ExpVal -> FScalarValue
 translateExpVal = \case
-  FV.Int     i   -> FSVInt     $ SomeFKinded $ FInt4 $ fromIntegral i
+  FV.Int     i   -> FSVInt     $ FInt4 $ fromIntegral i
 
   -- TODO getting some precisions errors, fortran-src over-precise? unsure where
   -- coming from, but need to compare using an epsilon
-  FV.Real    r   -> FSVReal    $ SomeFKinded $ FReal8 r
+  FV.Real    r   -> FSVReal    $ FReal8 r
 
-  FV.Str     s   -> FSVString  $ someFString $ Text.pack s
-  FV.Logical b   -> FSVLogical $ SomeFKinded $ FInt4 $ fLogicalNumericFromBool b
+  FV.Str     s   -> FSVString  $ Text.pack s
+  FV.Logical b   -> FSVLogical $ FInt4 $ fLogicalNumericFromBool b
 
   -- TODO fortran-vars always converts BOZs at INTEGER(2)
-  FV.Boz     boz -> FSVInt     $ SomeFKinded $ FInt2 $ AST.bozAsTwosComp boz
+  FV.Boz     boz -> FSVInt     $ FInt2 $ AST.bozAsTwosComp boz

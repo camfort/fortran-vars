@@ -5,6 +5,7 @@ module Language.Fortran.Vars.MemoryLocation
   )
 where
 
+import qualified Data.Foldable                 as Foldable
 import           Data.Data                      ( Data )
 import           Data.List                      ( foldl' )
 import qualified Data.Map                      as M
@@ -28,9 +29,9 @@ import           Language.Fortran.Vars.Types    ( SymbolTableEntry(..)
                                                 , Location
                                                 , Offset
                                                 , SymbolTable
-                                                )
-import           Language.Fortran.Analysis.SemanticTypes
-                                                ( dimensionsToTuples
+                                                , Dim(..), Dimensions
+                                                , dimensionsToTuples'
+                                                , dimensionsToTuples
                                                 )
 
 isIxSingle :: Index a -> Bool
@@ -58,10 +59,15 @@ linearizedIndex indices dimensions =
 
 -- | Given only single indices return the 'Range' in memory that
 -- these indices point to.
-generateLinearizedIndexRange :: [Int] -> Int -> Dimensions -> Int -> Range
+generateLinearizedIndexRange
+    :: (Functor t, Foldable t) => [Int] -> Int -> t (Dim Int) -> Int -> Range
 generateLinearizedIndexRange intIndices start dims kind =
-  let offset = linearizedIndex intIndices (dimensionsToTuples' dims) * kind
+  let offset = linearizedIndex intIndices dims' * kind
   in  (start + offset, start + offset + kind - 1)
+  where
+    -- TODO Ideally, we stay in our foldable for as long as possible. Shift this
+    -- into 'linearizedIndex' and try.
+    dims' = Foldable.toList $ fmap (\(Dim lb ub) -> (lb, ub)) dims
 
 findBlockOffset :: SymbolTable -> Name -> Offset -> Location
 findBlockOffset symTable symbol offset = case M.lookup symbol symTable of

@@ -1,8 +1,11 @@
+{-# LANGUAGE DerivingVia #-}
+
 module Language.Fortran.Vars.Eval
   ( eval
   , eval'Orig
   , eval'ViaFS
   , eval'
+  , runEval
   , evalWithShortcircuit
   )
 where
@@ -71,20 +74,16 @@ eval'Orig symTable expr = case expr of
     functionName _                   = ""
   _ -> Left $ "Unsupported expression at: " ++ show (getSpan expr)
 
--- | Given a 'SymbolTable' and some 'Expression', attempt to evaluate that
---   expression into a value in fortran-src's representation, translate it into
---   an 'ExpVal', and return.
-eval'ViaFS :: SymbolTable -> Expression a -> Either String ExpVal
-eval'ViaFS symt expr = flip runReader symt $ runExceptT $ do
-    x <- withExceptT show $ FSEval.evalExpr expr
-    ExceptT $ return $ translateFValue x
-
---newtype Eval = Eval { unEval :: ExceptT Error (Reader SymbolTable) }
+type Eval' = ExceptT FSEval.Error (Reader SymbolTable)
+newtype Eval a = Eval { unEval :: Eval' a }
+    deriving (Functor, Applicative, Monad) via Eval'
+    deriving (MonadReader SymbolTable) via Eval'
+    deriving (MonadError FSEval.Error) via Eval'
 
 -- | Evaluate Fortran values in SymbolTable using the fortran-src
 --   representation, implicitly translating between the representations.
-instance FSEval.MonadEval (ExceptT FSEval.Error (Reader SymbolTable)) where
-    type EvalTo (ExceptT FSEval.Error (Reader SymbolTable)) = FS.FValue
+instance FSEval.MonadFEval Eval where
+    type EvalTo Eval = FS.FValue
     lookupFVar name = do
         symt <- ask
         case Map.lookup name symt of
@@ -102,6 +101,18 @@ instance FSEval.MonadEval (ExceptT FSEval.Error (Reader SymbolTable)) where
     -- | Ignore warnings. fortran-vars doesn't have a method to report warnings
     --   during evaluation.
     warn _ = pure ()
+
+runEval :: SymbolTable -> Eval a -> Either FSEval.Error a
+runEval symt = flip runReader symt . runExceptT . unEval
+
+-- | Given a 'SymbolTable' and some 'Expression', attempt to evaluate that
+--   expression into a value in fortran-src's representation, translate it into
+--   an 'ExpVal', and return.
+eval'ViaFS :: SymbolTable -> Expression a -> Either String ExpVal
+eval'ViaFS symt expr =
+    case runEval symt (FSEval.evalExpr expr) of
+      Left err -> Left $ show err
+      Right a -> translateFValue a
 
 -- | Given a 'SymbolTable' and some 'Expression', evaluate that expression
 -- into a basic type and return it as an 'ExpVal'

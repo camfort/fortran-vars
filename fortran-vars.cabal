@@ -1,6 +1,6 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.35.0.
+-- This file has been generated from package.yaml by hpack version 0.35.2.
 --
 -- see: https://github.com/sol/hpack
 
@@ -47,8 +47,6 @@ library
       Language.Fortran.Vars.Range
       Language.Fortran.Vars.Repr
       Language.Fortran.Vars.ReprFS.Type
-      Language.Fortran.Vars.ReprFS.Value
-      Language.Fortran.Vars.ReprNew
       Language.Fortran.Vars.StorageClass
       Language.Fortran.Vars.StructureTable
       Language.Fortran.Vars.SymbolTable
@@ -98,8 +96,8 @@ library
     , containers >=0.5.7.1
     , deepseq >=1.4.4.0
     , fgl >=5
-    , fortran-src >=0.10.2 && <0.13
-    , fortran-src-extras >=0.4.0 && <0.5
+    , fortran-src >=0.14.0 && <0.15
+    , fortran-src-extras >=0.5.0 && <0.6
     , mtl
     , text >=1.2.2.2
     , uniplate >=1.6.10
@@ -149,8 +147,8 @@ executable fortran-vars
     , containers >=0.5.7.1
     , deepseq >=1.4.4.0
     , fgl >=5
-    , fortran-src >=0.10.2 && <0.13
-    , fortran-src-extras >=0.4.0 && <0.5
+    , fortran-src >=0.14.0 && <0.15
+    , fortran-src-extras >=0.5.0 && <0.6
     , fortran-vars
     , mtl
     , text >=1.2.2.2
@@ -214,8 +212,8 @@ test-suite spec
     , containers >=0.5.7.1
     , deepseq >=1.4.4.0
     , fgl >=5
-    , fortran-src >=0.10.2 && <0.13
-    , fortran-src-extras >=0.4.0 && <0.5
+    , fortran-src >=0.14.0 && <0.15
+    , fortran-src-extras >=0.5.0 && <0.6
     , fortran-vars
     , hspec
     , mtl
