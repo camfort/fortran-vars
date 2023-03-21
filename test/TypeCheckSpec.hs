@@ -1,10 +1,12 @@
 module TypeCheckSpec where
 
 import           Test.Hspec
+import           Util ( des1 )
 import           Control.Monad                  ( zipWithM_ )
 import           Data.Either                    ( isLeft )
 import           Data.List                      ( find )
 import qualified Data.Map                      as M
+import qualified Data.List.NonEmpty            as NonEmpty
 import           Data.Data                      ( Data )
 import           Language.Fortran.Extras        ( allPUS
                                                 , allPU
@@ -16,6 +18,7 @@ import           Language.Fortran.Vars          ( programFileModel )
 import           Language.Fortran.Vars.Types    ( Type
                                                 , SemType(..)
                                                 , CharacterLen(..)
+                                                , Dims(..), Dim(..)
                                                 )
 import           Language.Fortran.Vars.TypeCheck
                                                 ( typeOf
@@ -180,9 +183,9 @@ spec = do
 
     it "Index ranges" $ do
       (typeof, rhs) <- helper path puName
-      typeof (rhs "i1") `shouldBe` Right (TArray (TInteger 4) (Just [(1, 10)]))
-      typeof (rhs "i2") `shouldBe` Right (TArray (TInteger 4) (Just [(1, 10)]))
-      typeof (rhs "i3") `shouldBe` Right (TArray (TInteger 4) Nothing)
+      typeof (rhs "i1") `shouldBe` Right (TArray (TInteger 4) (des1 1 10))
+      typeof (rhs "i2") `shouldBe` Right (TArray (TInteger 4) (des1 1 10))
+      typeof (rhs "i3") `shouldBe` Right (TArray (TInteger 4) (DimsAssumedShape (3 :| [])))
 
     it "Erroneous expressions" $ do
       -- These expressions aren't valid but any subscript can be assumed to
@@ -360,18 +363,19 @@ spec = do
       strt = collectStructures symt pu
       dgs  = [ aStrip dgs' | StData _ _ dgs' <- allPUS pu ]
       test (DataGroup _ _ es _ : _) dims = typeOf strt symt (head $ aStrip es)
-        `shouldBe` Right (TArray (TInteger 2) (Just dims))
+        `shouldBe` Right (TArray (TInteger 2) (DimsExplicitShape dims))
       test _ _ = error "Shouldn't reach this"
+    let ds1 lb ub = NonEmpty.singleton $ Dim lb ub
     let res =
-          [ [(1, 5)]
-          , [(1, 3)]
-          , [(1, 3)]
-          , [(1, 9)]
-          , [(1, 2)]
-          , [(1, 6)]
-          , [(1, 3)]
-          , [(1, 2)]
-          , [(1, 2)]
+          [ ds1 1 5
+          , ds1 1 3
+          , ds1 1 3
+          , ds1 1 9
+          , ds1 1 2
+          , ds1 1 6
+          , ds1 1 3
+          , ds1 1 2
+          , ds1 1 2
           ]
     length dgs `shouldBe` length res
     zipWithM_ test dgs res

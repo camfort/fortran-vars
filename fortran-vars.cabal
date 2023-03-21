@@ -168,6 +168,7 @@ test-suite spec
       StructureTableSpec
       SymbolTableSpec
       TypeCheckSpec
+      Util
       Paths_fortran_vars
   hs-source-dirs:
       test

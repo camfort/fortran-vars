@@ -1,5 +1,8 @@
 module SymbolTableSpec where
 
+import           Test.Hspec
+import           Util ( des1 )
+
 import           Control.Exception              ( evaluate )
 import           Language.Fortran.Extras.Analysis
                                                 ( versionedExpandedProgramAnalysis
@@ -8,11 +11,12 @@ import           Language.Fortran.Util.Files    ( flexReadFile )
 import           Language.Fortran.Extras.ProgramFile
                                                 ( versionedProgramFile )
 import           Data.ByteString.Char8          ( ByteString )
-import qualified Data.Map                      as M
+import qualified Data.Map                       as M
+import           Data.List.NonEmpty             ( NonEmpty( (:|) ) )
+import qualified Data.List.NonEmpty             as NonEmpty
 import           Language.Fortran.AST           ( ProgramUnitName(..) )
 import           Language.Fortran.Version       ( FortranVersion(..) )
 import           Language.Fortran.Analysis      ( initAnalysis )
-import           Test.Hspec
 
 import           Language.Fortran.Vars          ( programFileModel )
 import           Language.Fortran.Vars.Types    ( SymbolTableEntry(..)
@@ -21,6 +25,7 @@ import           Language.Fortran.Vars.Types    ( SymbolTableEntry(..)
                                                 , CharacterLen(..)
                                                 , ExpVal(..)
                                                 , SymbolTable
+                                                , Dim(..), Dims(..)
                                                 )
 
 getSymTable :: String -> ByteString -> String -> SymbolTable
@@ -56,23 +61,23 @@ typeOf name symTable =
         SDummy ty       -> ty
         _               -> error (name ++ " is not an Entry that has type")
 
-dimensionOf :: String -> SymbolTable -> Maybe [(Int, Int)]
+dimensionOf :: String -> SymbolTable -> Maybe [Dim Int]
 dimensionOf name symTable =
   let Just entry = M.lookup name symTable
   in  case entry of
-        SVariable (TArray _ dims) _ -> dims
-        SDummy (TArray _ dims) -> dims
+        SVariable (TArray _ (DimsExplicitShape dims)) _ -> Just $ NonEmpty.toList dims
+        SDummy (TArray _ (DimsExplicitShape dims)) -> Just $ NonEmpty.toList dims
         _ -> error (name ++ " is not an Entry that has static dimension")
 
 dummyOf :: String -> M.Map String SymbolTableEntry -> String
 dummyOf name symTable =
   let Just entry = M.lookup name symTable
   in  case entry of
-        SDummy (TArray (TCharacter CharLenStar _) Nothing) ->
+        SDummy (TArray (TCharacter CharLenStar _) _) ->
           "DummyArrayDynamicCharacter"
         SDummy (TCharacter CharLenStar _) -> "DummyDynamicCharacter"
-        SDummy (TArray _ Nothing) -> "DummyDynamicArray"
-        SDummy (TArray _ (Just _)) -> "DummyStaticArray"
+        SDummy (TArray _ DimsExplicitShape{}) -> "DummyStaticArray"
+        SDummy (TArray _ _) -> "DummyDynamicArray"
         SDummy _ -> "DummyStaticScalar"
         v -> error (name ++ " is not a DummyVariableEntry it is a " ++ show v)
 
@@ -85,7 +90,8 @@ isDynamic :: String -> SymbolTable -> Bool
 isDynamic name symTable = case M.lookup name symTable of
   Just (SVariable ty _) -> case ty of
     TArray (TCharacter CharLenStar _) _ -> True
-    TArray _ Nothing -> True
+    TArray _ DimsExplicitShape{} -> False
+    TArray _ _ -> True
     TCharacter CharLenStar _ -> True
     _ -> False
   _ -> False
@@ -246,9 +252,9 @@ spec = do
       contents <- flexReadFile path
       let symTable = getSymTable path contents unitName
       typeOf "i2_arr" symTable
-        `shouldBe` TArray (TInteger 2) (Just [(1, 3), (1, 4)])
+        `shouldBe` TArray (TInteger 2) (DimsExplicitShape (Dim 1 3 :| [Dim 1 4]))
       typeOf "i8_arr" symTable
-        `shouldBe` TArray (TInteger 8) (Just [(1, 3), (1, 4)])
+        `shouldBe` TArray (TInteger 8) (DimsExplicitShape (Dim 1 3 :| [Dim 1 4]))
 
   describe "Dimension: " $ do
 
@@ -258,65 +264,62 @@ spec = do
     it "Single dimension" $ do
       contents <- flexReadFile path
       let symTable = getSymTable path contents unitName
-      dimensionOf "a" symTable `shouldBe` Just [(1, 10)]
-      dimensionOf "b" symTable `shouldBe` Just [(-3, 5)]
-      dimensionOf "c" symTable `shouldBe` Just [(1, 45)]
+      dimensionOf "a" symTable `shouldBe` Just [Dim 1 10]
+      dimensionOf "b" symTable `shouldBe` Just [Dim (-3) 5]
+      dimensionOf "c" symTable `shouldBe` Just [Dim 1 45]
 
     it "Multi-dimension" $ do
       contents <- flexReadFile path
       let symTable = getSymTable path contents unitName
-      dimensionOf "a2" symTable `shouldBe` Just [(1, 5), (1, 5)]
-      dimensionOf "a3" symTable `shouldBe` Just [(1, 5), (1, 5), (1, 5)]
-      dimensionOf "a4" symTable `shouldBe` Just [(1, 5), (1, 5), (1, 5), (1, 5)]
-      dimensionOf "a5" symTable
-        `shouldBe` Just [(1, 5), (1, 5), (1, 5), (1, 5), (1, 5)]
-      dimensionOf "a6" symTable
-        `shouldBe` Just [(1, 5), (1, 5), (1, 5), (1, 5), (1, 5), (1, 5)]
-      dimensionOf "a7" symTable `shouldBe` Just
-        [(1, 5), (1, 5), (1, 5), (1, 5), (1, 5), (1, 5), (1, 5)]
+      dimensionOf "a2" symTable `shouldBe` Just [Dim 1 5, Dim 1 5]
+      dimensionOf "a3" symTable `shouldBe` Just [Dim 1 5, Dim 1 5, Dim 1 5]
+      dimensionOf "a4" symTable `shouldBe` Just [Dim 1 5, Dim 1 5, Dim 1 5, Dim 1 5]
+      dimensionOf "a5" symTable `shouldBe` Just [Dim 1 5, Dim 1 5, Dim 1 5, Dim 1 5, Dim 1 5]
+      dimensionOf "a6" symTable `shouldBe` Just [Dim 1 5, Dim 1 5, Dim 1 5, Dim 1 5, Dim 1 5, Dim 1 5]
+      dimensionOf "a7" symTable `shouldBe` Just [Dim 1 5, Dim 1 5, Dim 1 5, Dim 1 5, Dim 1 5, Dim 1 5, Dim 1 5]
 
     it "Dimension statement" $ do
       contents <- flexReadFile path
       let symTable = getSymTable path contents unitName
-      dimensionOf "d" symTable `shouldBe` Just [(1, 10)]
-      dimensionOf "m" symTable `shouldBe` Just [(1, 10), (1, 20)]
+      dimensionOf "d" symTable `shouldBe` Just [Dim 1 10]
+      dimensionOf "m" symTable `shouldBe` Just [Dim 1 10, Dim 1 20]
 
     it "String array" $ do
       contents <- flexReadFile path
       let symTable = getSymTable path contents unitName
-      dimensionOf "reqname" symTable `shouldBe` Just [(1, 64)]
-      dimensionOf "test" symTable `shouldBe` Just [(1, 3), (1, 4)]
+      dimensionOf "reqname" symTable `shouldBe` Just [Dim 1 64]
+      dimensionOf "test" symTable `shouldBe` Just [Dim 1 3, Dim 1 4]
 
     it "Integer array" $ do
       contents <- flexReadFile path
       let symTable = getSymTable path contents unitName
-      dimensionOf "itest1" symTable `shouldBe` Just [(1, 3), (1, 4)]
-      dimensionOf "itest2" symTable `shouldBe` Just [(1, 3), (1, 4)]
+      dimensionOf "itest1" symTable `shouldBe` Just [Dim 1 3, Dim 1 4]
+      dimensionOf "itest2" symTable `shouldBe` Just [Dim 1 3, Dim 1 4]
 
 
     it "Dimension declaration within COMMON - as ExpSubscript" $ do
       contents <- flexReadFile path
       let symTable = getSymTable path contents unitName
 
-      dimensionOf "arr_before_range" symTable `shouldBe` Just [(8, 10)]
+      dimensionOf "arr_before_range" symTable `shouldBe` Just [Dim 8 10]
       dimensionOf "arr_before_multi" symTable
-        `shouldBe` Just [(1, 12), (14, 16)]
+        `shouldBe` Just [Dim 1 12, Dim 14 16]
 
-      dimensionOf "arr_after_range" symTable `shouldBe` Just [(22, 24)]
-      dimensionOf "arr_after_multi" symTable `shouldBe` Just [(1, 26), (28, 30)]
+      dimensionOf "arr_after_range" symTable `shouldBe` Just [Dim 22 24]
+      dimensionOf "arr_after_multi" symTable `shouldBe` Just [Dim 1 26, Dim 28 30]
 
     it "Dimension declaration within COMMON - as ExpFunctionCall" $ do
       contents <- flexReadFile path
       let symTable = getSymTable path contents unitName
 
-      dimensionOf "arr_before_standard_kind" symTable `shouldBe` Just [(1, 2)]
-      dimensionOf "arr_before_simple" symTable `shouldBe` Just [(1, 4)]
+      dimensionOf "arr_before_standard_kind" symTable `shouldBe` Just [Dim 1 2]
+      dimensionOf "arr_before_simple" symTable `shouldBe` Just [Dim 1 4]
       dimensionOf "arr_before_nonstandard_kind" symTable
-        `shouldBe` Just [(1, 6)]
+        `shouldBe` Just [Dim 1 6]
 
-      dimensionOf "arr_after_standard_kind" symTable `shouldBe` Just [(1, 18)]
-      dimensionOf "arr_after_simple" symTable `shouldBe` Just [(1, 20)]
-      dimensionOf "arr_after_nonstandard_kind" symTable `shouldBe` Just [(1, 2)]
+      dimensionOf "arr_after_standard_kind" symTable `shouldBe` Just [Dim 1 18]
+      dimensionOf "arr_after_simple" symTable `shouldBe` Just [Dim 1 20]
+      dimensionOf "arr_after_nonstandard_kind" symTable `shouldBe` Just [Dim 1 2]
 
   describe "Dummy Argument: " $ do
 
@@ -331,7 +334,7 @@ spec = do
       typeOf "stscalar1" symTable `shouldBe` TInteger 4
 
       dummyOf "starr1" symTable `shouldBe` "DummyStaticArray"
-      typeOf "starr1" symTable `shouldBe` TArray (TInteger 4) (Just [(1, 5)])
+      typeOf "starr1" symTable `shouldBe` TArray (TInteger 4) (des1 1 5)
 
     it "Dummy variables - dynamic" $ do
       contents <- flexReadFile path
@@ -340,19 +343,19 @@ spec = do
       dummyOf "dynscalar1" symTable `shouldBe` "DummyDynamicCharacter"
 
       dummyOf "dynarr1" symTable `shouldBe` "DummyDynamicArray"
-      typeOf "dynarr1" symTable `shouldBe` TArray (TInteger 4) Nothing
+      typeOf "dynarr1" symTable `shouldBe` TArray (TInteger 4) (DimsAssumedSize Nothing 1)
 
       dummyOf "dynarr2" symTable `shouldBe` "DummyDynamicArray"
-      typeOf "dynarr2" symTable `shouldBe` TArray (TInteger 4) Nothing
+      typeOf "dynarr2" symTable `shouldBe` TArray (TInteger 4) undefined
 
       dummyOf "dynarr3" symTable `shouldBe` "DummyDynamicArray"
-      typeOf "dynarr3" symTable `shouldBe` TArray (TInteger 4) Nothing
+      typeOf "dynarr3" symTable `shouldBe` TArray (TInteger 4) (DimsAssumedSize (Just (Dim 1 3 :| [])) 1)
 
       dummyOf "dynarr4" symTable `shouldBe` "DummyDynamicArray"
-      typeOf "dynarr4" symTable `shouldBe` TArray (TInteger 4) Nothing
+      typeOf "dynarr4" symTable `shouldBe` TArray (TInteger 4) undefined
 
       evaluate (dummyOf "dynarr5" symTable) `shouldThrow` anyErrorCall
-      typeOf "dynarr5" symTable `shouldBe` TArray (TInteger 4) Nothing
+      typeOf "dynarr5" symTable `shouldBe` TArray (TInteger 4) undefined
 
   describe "Dummy array of dynamically-sized strings" $ do
     let path     = "test/symbol_table/dummy_array_dynamic_strings.f"
@@ -389,7 +392,7 @@ spec = do
       symTable <- getSymTableIO path_interface contents unitName
 
       typeOf "sespit_get_psetdt" symTable
-        `shouldBe` TArray (TInteger 2) (Just [(1, 3)])
+        `shouldBe` TArray (TInteger 2) (des1 1 3)
       typeOf "sespit_get_psetdt2_e" symTable `shouldBe` TInteger 2
       -- Check we don't pick up subroutines or arguments
       M.member "index" symTable `shouldBe` False
@@ -571,31 +574,31 @@ spec = do
     it "Dynamic array" $ do
       contents <- flexReadFile path
       let symTable = getSymTable path contents "f2"
-      typeOf "arr" symTable `shouldBe` TArray (TInteger 4) Nothing
+      typeOf "arr" symTable `shouldBe` TArray (TInteger 4) undefined
       isDynamic "arr" symTable `shouldBe` True
 
     it "Dynamic character Dynamic array" $ do
       contents <- flexReadFile path
       let st = getSymTable path contents "f3"
-      typeOf "arr" st `shouldBe` TArray (TCharacter CharLenStar 1) Nothing
+      typeOf "arr" st `shouldBe` TArray (TCharacter CharLenStar 1) undefined
       isDynamic "arr" st `shouldBe` True
 
     it "Dynamic character static array" $ do
       contents <- flexReadFile path
       let st = getSymTable path contents "f4"
       typeOf "arr" st
-        `shouldBe` TArray (TCharacter CharLenStar 1) (Just [(1, 5)])
+        `shouldBe` TArray (TCharacter CharLenStar 1) (des1 1 5)
       isDynamic "arr" st `shouldBe` True
 
     it "Static character dynamic array" $ do
       contents <- flexReadFile path
       let st = getSymTable path contents "f5"
-      typeOf "arr" st `shouldBe` TArray (TCharacter (CharLenInt 5) 1) Nothing
+      typeOf "arr" st `shouldBe` TArray (TCharacter (CharLenInt 5) 1) undefined
       isDynamic "arr" st `shouldBe` True
 
     it "Dummy not dynamic" $ do
       contents <- flexReadFile path
       let st = getSymTable path contents "f6"
-      typeOf "arr" st `shouldBe` TArray (TCharacter CharLenStar 1) Nothing
+      typeOf "arr" st `shouldBe` TArray (TCharacter CharLenStar 1) undefined
       isDynamic "arr" st `shouldBe` False
       isDummy "arr" st `shouldBe` True
