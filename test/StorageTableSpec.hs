@@ -1,6 +1,7 @@
 module StorageTableSpec where
 
 import           Test.Hspec
+import           Util ( des1 )
 
 import           Language.Fortran.Util.Files    ( flexReadFile )
 import           Language.Fortran.Extras.ProgramFile
@@ -412,18 +413,18 @@ spec = do
       commonLayoutBf
         `shouldBe` [ ( "char_array_a"
                      , 0
-                     , TArray (TCharacter (CharLenInt 7) 1) (Just [(1, 65)])
+                     , TArray (TCharacter (CharLenInt 7) 1) (des1 1 65)
                      )
                    , ("int_b"      , 456, TInteger 4)
-                   , ("int_array_c", 456, TArray (TInteger 4) (Just [(1, 10)]))
+                   , ("int_array_c", 456, TArray (TInteger 4) (des1 1 10))
                    ]
       commonLayoutBn
         `shouldBe` [ ( "char_array_a"
                      , 0
-                     , TArray (TCharacter (CharLenInt 7) 1) (Just [(1, 65)])
+                     , TArray (TCharacter (CharLenInt 7) 1) (des1 1 65)
                      )
                    , ("int_b"      , 455, TInteger 4)
-                   , ("int_array_c", 455, TArray (TInteger 4) (Just [(1, 10)]))
+                   , ("int_array_c", 455, TArray (TInteger 4) (des1 1 10))
                    ]
       commonLayoutCf
         `shouldBe` [ ("int_a", 0, TInteger 4)

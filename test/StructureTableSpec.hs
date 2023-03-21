@@ -4,6 +4,7 @@ import qualified Data.Map                      as M
 import           Data.Generics.Uniplate.Data
 
 import           Test.Hspec
+import           Util ( des1 )
 
 import           Language.Fortran.Analysis      ( Analysis )
 import           Language.Fortran.AST           ( ProgramUnit
@@ -96,21 +97,21 @@ spec = do
           strctTables = zipWith collectStructures sts pus
       head strctTables `shouldBe` M.fromList
         [ ( "str_inner"
-          , [FieldEntry "inner_arr" (TArray (TInteger 1) (Just [(1, 5)]))]
+          , [FieldEntry "inner_arr" (TArray (TInteger 1) (des1 1 5))]
           )
         ]
       (strctTables !! 1) `shouldBe` M.fromList
         [ ( "str_inner"
-          , [FieldEntry "inner_arr" (TArray (TInteger 2) (Just [(1, 5)]))]
+          , [FieldEntry "inner_arr" (TArray (TInteger 2) (des1 1 5))]
           )
         ]
       (strctTables !! 2) `shouldBe` M.fromList
         [ ( "str_inner"
-          , [FieldEntry "inner_arr" (TArray (TInteger 1) (Just [(1, 3)]))]
+          , [FieldEntry "inner_arr" (TArray (TInteger 1) (des1 1 3))]
           )
         , ( "str_outer"
           , [ FieldEntry "outer_arr"
-                         (TArray (TCustom "str_inner") (Just [(1, 5)]))
+                         (TArray (TCustom "str_inner") (des1 1 5))
             ]
           )
         ]
@@ -201,7 +202,7 @@ spec = do
             )
             [ Right (TInteger 1)
             , Right (TInteger 2)
-            , Right (TArray (TInteger 1) (Just [(1, 3)]))
+            , Right (TArray (TInteger 1) (des1 1 3))
             ]
       mapM_ (uncurry testStructureTablePU) $ zip pus logics
 
