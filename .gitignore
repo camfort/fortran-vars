@@ -1,6 +1,12 @@
+# Haskell build files
+/dist-newstyle/
 .stack-work/
+
+# temporary editor files
 *~
 *.swp
+
+# etc
 a.out
 *.o
 *.prof

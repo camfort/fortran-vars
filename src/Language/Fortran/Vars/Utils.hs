@@ -6,7 +6,9 @@ import           Language.Fortran.Vars.Types    ( SymbolTable
                                                 , ExpVal(..)
                                                 , Type
                                                 , SemType(..)
-                                                , Dimensions(..)
+                                                , Dim(..)
+                                                , Dims(..)
+                                                , Dimensions
                                                 )
 import           Language.Fortran.Vars.Eval     ( eval
                                                 , eval'
@@ -23,16 +25,18 @@ typeSpecToArrayType
   -> [DimensionDeclarator (Analysis a)]
   -> TypeSpec (Analysis a)
   -> Type
-typeSpecToArrayType st dims tySpec = TArray scalarTy $ foldr go DimensionsEnd dims
+--typeSpecToArrayType st dims tySpec = TArray scalarTy $ foldr go DimensionsEnd dims
+typeSpecToArrayType st dims tySpec =
+    case foldr go [] dims of
+      [] -> error "invalid array spec: zero dimensions"
+      d:ds -> TArray scalarTy $ DimsExplicitShape $ d :| ds
  where
-  go (DimensionDeclarator _ _ (Just lb) (Just ub)) dims =
-      DimensionsCons bounds dims
-    where bounds = (constInt lb, constInt ub)
-  go (DimensionDeclarator _ _ Nothing   (Just ub)) dims =
-      DimensionsCons bounds dims
-    where bounds = (1, constInt ub)
-  go _ _ = error "Invalid dimension declarator"
   scalarTy = typeSpecToScalarType st tySpec
+  go (DimensionDeclarator _ _ (Just lb) (Just ub)) dims =
+      Dim (constInt lb) (constInt ub) : dims
+  go (DimensionDeclarator _ _ Nothing   (Just ub)) dims =
+      Dim 1 (constInt ub) : dims
+  go _ _ = error "Invalid dimension declarator"
   constInt x = case eval st x of
     Int y -> y
     _     -> error "Invalid array spec"

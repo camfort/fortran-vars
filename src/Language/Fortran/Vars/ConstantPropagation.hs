@@ -157,8 +157,10 @@ getVariableMemory symTable name = case M.lookup name symTable of
   -- Array pointer passed to subroutine/function (thus treated as 'ValVariable')
   Just (SVariable (TArray ty dims) (memBlockName, offset)) -> do
     kind  <- getTypeKind ty
-    dims' <- dims
-    Just (memBlockName, (offset, offset + sizeOfArray kind dims' - 1))
+    case dims of
+      DimsExplicitShape ds ->
+        Just (memBlockName, (offset, offset + sizeOfArray kind ds - 1))
+      _ -> Nothing
   Just (SVariable ty (memBlockName, offset)) -> do
     kind <- getTypeKind ty
     Just (memBlockName, (offset, offset + kind - 1))
@@ -201,7 +203,7 @@ getArrayMemory symTable memTables name indices =
   let Just entry  = M.lookup name symTable
       idxCPValues = cpValueOfIndices symTable memTables indices
   in  case entry of
-        SVariable (TArray ty dims) (memBlockName, start)
+        SVariable (TArray ty (DimsExplicitShape dims)) (memBlockName, start)
           | any isBot idxCPValues
           -> UnknownIndices . (memBlockName, ) <$> arrayRange
           | any isTop idxCPValues
@@ -558,13 +560,7 @@ label
 label = insLabel . getAnnotation
 
 -- | Given kind and dimensions, calculate the size of an array
-sizeOfArray :: Int -> Dimensions -> Int
-sizeOfArray kind dimension =
-  let arraySize = foldl (\acc (l, h) -> acc * (h - l + 1)) 1 (dimensionsToTuples' dimension)
-  in  kind * arraySize
-
-dimensionsToTuples' :: Dimensions -> [(Int, Int)]
-dimensionsToTuples' dims =
-    case dimensionsToTuples dims of
-      Nothing    -> []
-      Just dims' -> dims'
+sizeOfArray :: Foldable t => Int -> t (Dim Int) -> Int
+sizeOfArray kind dims = kind * arraySize
+  where
+    arraySize = foldl' (\acc (Dim l h) -> acc * (h - l + 1)) 1 dims

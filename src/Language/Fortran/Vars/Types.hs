@@ -6,7 +6,7 @@ module Language.Fortran.Vars.Types
   ( module Language.Fortran.Vars.Types
   , Type
   , SemType(..)
-  , Dimensions(..), dimensionsToTuples
+  , Dim(..), Dims(..), Dimensions, dimensionsToTuples, dimensionsToTuples'
   , CharacterLen(..)
   , Kind
   , ExpVal(..)
@@ -119,3 +119,9 @@ instance ToJSON TypeError
 instance FromJSON TypeError
 
 type TypeOf a = Expression a -> Either TypeError Type
+
+dimensionsToTuples' :: Dimensions -> [(Int, Int)]
+dimensionsToTuples' dims =
+    case dimensionsToTuples dims of
+      Nothing    -> []
+      Just dims' -> dims'

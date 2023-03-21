@@ -45,7 +45,7 @@ import           Language.Fortran.Vars.Types    ( ExpVal(..)
                                                 , SemType(..)
                                                 , CharacterLen(..)
                                                 , SymbolTable
-                                                , Dimensions(..)
+                                                , Dim(..), Dims(..), Dimensions
                                                 )
 import           Language.Fortran.Vars.Utils    ( typeSpecToScalarType
                                                 , typeSpecToArrayType
@@ -203,7 +203,8 @@ handleDeclaration symTable typespec decls = foldl' f symTable (aStrip decls)
       symbol = srcName varExp
       entry  = case charLength of
         Just (ExpValue _ _ ValStar) ->
-          SVariable (TArray (TCharacter CharLenStar 1) DimensionsFinalStar) (symbol, 0)
+          let ty = TArray (TCharacter CharLenStar 1) (DimsAssumedSize Nothing 1)
+          in  SVariable ty (symbol, 0)
         _ ->
           case resolveDims symt (aStrip dimDecls) of
             Nothing -> error "unsupported dimension declarators: probably skip instead of erroring"
