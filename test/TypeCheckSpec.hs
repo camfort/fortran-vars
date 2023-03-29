@@ -185,7 +185,7 @@ spec = do
       (typeof, rhs) <- helper path puName
       typeof (rhs "i1") `shouldBe` Right (TArray (TInteger 4) (des1 1 10))
       typeof (rhs "i2") `shouldBe` Right (TArray (TInteger 4) (des1 1 10))
-      typeof (rhs "i3") `shouldBe` Right (TArray (TInteger 4) (DimsAssumedShape (3 :| [])))
+      typeof (rhs "i3") `shouldBe` Right (TArray (TInteger 4) (DimsAssumedShape (Just 3 :| [])))
 
     it "Erroneous expressions" $ do
       -- These expressions aren't valid but any subscript can be assumed to
@@ -365,7 +365,7 @@ spec = do
       test (DataGroup _ _ es _ : _) dims = typeOf strt symt (head $ aStrip es)
         `shouldBe` Right (TArray (TInteger 2) (DimsExplicitShape dims))
       test _ _ = error "Shouldn't reach this"
-    let ds1 lb ub = NonEmpty.singleton $ Dim lb ub
+    let ds1 lb ub = NonEmpty.singleton $ Dim (Just lb) (Just ub)
     let res =
           [ ds1 1 5
           , ds1 1 3

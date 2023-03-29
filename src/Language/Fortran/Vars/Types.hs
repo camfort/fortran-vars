@@ -7,12 +7,14 @@ module Language.Fortran.Vars.Types
   , Type
   , SemType(..)
   , Dim(..), Dims(..), Dimensions, dimensionsToTuples, dimensionsToTuples'
+  , dimsTraverse, getStaticArrayBounds
   , CharacterLen(..)
   , Kind
   , ExpVal(..)
   )
 where
 
+import           Language.Fortran.Common.Array ( dimsTraverse )
 import           Language.Fortran.Vars.Orphans()
 import           Language.Fortran.Vars.Repr
 import           Data.Aeson                     ( FromJSON
@@ -125,3 +127,9 @@ dimensionsToTuples' dims =
     case dimensionsToTuples dims of
       Nothing    -> []
       Just dims' -> dims'
+
+-- | Attempt to turn a list of evaluated array bounds which may include unknown
+--   bounds, into a list of known bounds. Any unknown bounds will result in a
+--   'Nothing'.
+getStaticArrayBounds :: Traversable t => Dims t (Maybe a) -> Maybe (Dims t a)
+getStaticArrayBounds = dimsTraverse

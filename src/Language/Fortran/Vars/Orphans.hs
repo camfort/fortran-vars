@@ -12,7 +12,7 @@ import Data.Aeson ( ToJSON, FromJSON, ToJSONKey, FromJSONKey )
 
 -- TODO temporary solution
 instance   ToJSON SemType
-instance FromJSON (Dim Int)
+instance FromJSON (Dim (Maybe Int))
 instance FromJSON Dimensions
 instance FromJSON SemType
 instance   ToJSON CharacterLen
