@@ -185,7 +185,7 @@ spec = do
       (typeof, rhs) <- helper path puName
       typeof (rhs "i1") `shouldBe` Right (TArray (TInteger 4) (des1 1 10))
       typeof (rhs "i2") `shouldBe` Right (TArray (TInteger 4) (des1 1 10))
-      typeof (rhs "i3") `shouldBe` Right (TArray (TInteger 4) (DimsAssumedShape (Just 3 :| [])))
+      typeof (rhs "i3") `shouldBe` Right (TArray (TInteger 4) (DimsExplicitShape (Dim (Just 1) Nothing :| [])))
 
     it "Erroneous expressions" $ do
       -- These expressions aren't valid but any subscript can be assumed to
