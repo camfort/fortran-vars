@@ -105,11 +105,11 @@ typeOf strTable symTable expr = case expr of
     dim <- specToDim symTable doSpec
     ty  <- typeOf strTable symTable . head $ aStrip es
     pure $ case ty of
-      TArray ty' (DimsExplicitShape (Dim 1 dim' :| [])) ->
-        TArray ty' $ DimsExplicitShape $ Dim 1 (dim * dim') :| []
+      TArray ty' (DimsExplicitShape (Dim (Just 1) (Just dim') :| [])) ->
+        TArray ty' $ DimsExplicitShape $ Dim (Just 1) (Just (dim * dim')) :| []
       TArray _ _ -> error "Unexpected array type in implied do"
       _ ->
-        TArray ty  $ DimsExplicitShape $ Dim 1 dim :| []
+        TArray ty  $ DimsExplicitShape $ Dim (Just 1) (Just dim) :| []
 
   ExpDataRef _ _ es (ExpValue _ _ (ValVariable name)) -> do
     ty <- typeOf strTable symTable es

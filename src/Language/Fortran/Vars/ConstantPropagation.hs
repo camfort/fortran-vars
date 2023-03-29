@@ -157,8 +157,8 @@ getVariableMemory symTable name = case M.lookup name symTable of
   -- Array pointer passed to subroutine/function (thus treated as 'ValVariable')
   Just (SVariable (TArray ty dims) (memBlockName, offset)) -> do
     kind  <- getTypeKind ty
-    case dims of
-      DimsExplicitShape ds ->
+    case dimsTraverse dims of
+      Just (DimsExplicitShape ds) ->
         Just (memBlockName, (offset, offset + sizeOfArray kind ds - 1))
       _ -> Nothing
   Just (SVariable ty (memBlockName, offset)) -> do
@@ -200,32 +200,43 @@ getArrayMemory
   -> [Index (Analysis a)]
   -> Maybe ArrayMemory
 getArrayMemory symTable memTables name indices =
-  let Just entry  = M.lookup name symTable
-      idxCPValues = cpValueOfIndices symTable memTables indices
-  in  case entry of
-        SVariable (TArray ty (DimsExplicitShape dims)) (memBlockName, start)
-          | any isBot idxCPValues
-          -> UnknownIndices . (memBlockName, ) <$> arrayRange
-          | any isTop idxCPValues
-          -> UnknownIndices . (memBlockName, ) <$> arrayRange
-          | not (all isConstInt idxCPValues)
-          -> UnknownIndices . (memBlockName, ) <$> arrayRange
-          | otherwise
-          -> do
-            let is = map unsafeStripIndexCP idxCPValues
-            range <- generateLinearizedIndexRange is start <$> pure dims <*> kind
-            Just $ ConstantIndices (memBlockName, range)
-         where
-          kind       = getTypeKind ty
-          size       = sizeOfArray <$> kind <*> pure dims
-          arrayRange = (\x -> (start, start + x - 1)) <$> size
-        SVariable ty (memBlockName, start)
-          | null indices -> ConstantIndices . (memBlockName, ) <$> range
-          | otherwise    -> UnknownIndices . (memBlockName, ) <$> range
-         where
-          kind  = getTypeKind ty
-          range = (\x -> (start, start + x - 1)) <$> kind
-        _ -> Nothing
+    case M.lookup name symTable of
+      Nothing -> error $ "variable not in symbol table: "<>name
+      Just entry ->
+        case entry of
+          SVariable ty (memBlockName, start) ->
+            case ty of
+              TArray _ dims' ->
+                case dimsTraverse dims' of -- only handle static
+                  Just (DimsExplicitShape dims)
+                    | any isBot idxCPValues
+                    -> UnknownIndices . (memBlockName, ) <$> arrayRange
+                    | any isTop idxCPValues
+                    -> UnknownIndices . (memBlockName, ) <$> arrayRange
+                    | not (all isConstInt idxCPValues)
+                    -> UnknownIndices . (memBlockName, ) <$> arrayRange
+                    | otherwise
+                    -> do
+                      let is = map unsafeStripIndexCP idxCPValues
+                      range <- generateLinearizedIndexRange is start <$> pure dims <*> kind
+                      Just $ ConstantIndices (memBlockName, range)
+                   where
+                    kind       = getTypeKind ty
+                    size       = sizeOfArray <$> kind <*> pure dims
+                    arrayRange = (\x -> (start, start + x - 1)) <$> size
+
+                  -- only handle explicit-shape arrays
+                  Just{} -> Nothing
+                  Nothing -> Nothing
+              _
+                | null indices -> ConstantIndices . (memBlockName, ) <$> range
+                | otherwise    -> UnknownIndices . (memBlockName, ) <$> range
+               where
+                kind  = getTypeKind ty
+                range = (\x -> (start, start + x - 1)) <$> kind
+          _ -> Nothing
+  where
+    idxCPValues = cpValueOfIndices symTable memTables indices
 
 -- | Internal function to find 'CPValue' of a symbol
 lookupName :: SymbolTable -> MemoryTables -> Name -> CPValue

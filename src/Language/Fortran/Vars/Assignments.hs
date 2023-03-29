@@ -33,6 +33,7 @@ import           Language.Fortran.Vars.Types    ( SymbolTable
                                                 , StructureTable
                                                 , SymbolTableEntry(..)
                                                 , Dims(..)
+                                                , dimsTraverse
                                                 , Dim(..)
                                                 , Type
                                                 , SemType(..)
@@ -103,7 +104,9 @@ declarators strt symt = concatMap f where
     pure $ (, e) <$> typeOf strt symt v
   f d@(Declarator _ _ (ExpValue _ s (ValVariable v)) ArrayDecl{} _ (Just (ExpInitialisation _ _ vals)))
     = case M.lookup v symt of
-      Just (SVariable (TArray ty (DimsExplicitShape dims)) _) ->
+      Just (SVariable (TArray ty dims') _) ->
+       case dimsTraverse dims' of -- only static arrays
+       Just (DimsExplicitShape dims) ->
         let tys   = expandDimensions dims ty
             vals' = aStrip vals
         in  if length tys /= length vals'
@@ -117,6 +120,19 @@ declarators strt symt = concatMap f where
                   , pprint77l d
                   ]
               else fmap Right $ zip (expandDimensions dims ty) $ aStrip vals
+       -- only static explicit-shape arrays permitted
+       Just{} ->
+        pure
+          .  Left
+          .  typeError s
+          $  "Unexpected lhs in array declaration at: "
+          <> pprint77l d
+       Nothing ->
+        pure
+          .  Left
+          .  typeError s
+          $  "Unexpected lhs in array declaration at: "
+          <> pprint77l d
       _ ->
         pure
           .  Left
@@ -133,8 +149,10 @@ expandArrays
   -> [Either TypeError Type]
 expandArrays strt symt e = case e of
   ExpValue _ _ (ValVariable var) -> case M.lookup var symt of
-    Just (SVariable (TArray ty (DimsExplicitShape dims)) _) ->
-      expandDimensions dims (Right ty)
+    Just (SVariable (TArray sty dims') _) ->
+     case dimsTraverse dims' of
+      Just (DimsExplicitShape dims) -> expandDimensions dims (Right sty)
+      _ -> [Right sty]
     Just (SVariable ty _) -> [Right ty]
     _ ->
       pure

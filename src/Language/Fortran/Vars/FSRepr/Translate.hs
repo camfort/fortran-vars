@@ -40,7 +40,10 @@ translateFKind = fromIntegral
 -- | Note that Fortran defaults to 1-indexed arrays.
 translateShape :: Shape -> FV.Dimensions
 translateShape =
-    FV.DimsExplicitShape . NonEmpty.fromList . map (\ub -> FV.Dim 1 (fromIntegral ub)) . getShape
+      FV.DimsExplicitShape
+    . NonEmpty.fromList
+    . map (\ub -> FV.Dim (Just 1) (Just (fromIntegral ub)))
+    . getShape
 
 --------------------------------------------------------------------------------
 

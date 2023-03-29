@@ -32,6 +32,7 @@ import           Language.Fortran.AST           ( AList
                                                 , Value(..)
                                                 )
 
+import           Language.Fortran.Vars.SymbolTable.Arrays ( resolveDims )
 import           Language.Fortran.Vars.Eval     ( eval
                                                 , eval'
                                                 )
@@ -203,7 +204,7 @@ handleDeclaration symTable typespec decls = foldl' f symTable (aStrip decls)
       symbol = srcName varExp
       entry  = case charLength of
         Just (ExpValue _ _ ValStar) ->
-          let ty = TArray (TCharacter CharLenStar 1) (DimsAssumedSize Nothing 1)
+          let ty = TArray (TCharacter CharLenStar 1) (DimsAssumedSize Nothing (Just 1))
           in  SVariable ty (symbol, 0)
         _ ->
           case resolveDims symt (aStrip dimDecls) of
@@ -362,61 +363,3 @@ collectSymbols :: Data a => ProgramUnit (Analysis a) -> SymbolTable
 collectSymbols pu =
   let puSignatureSymbols = puSymbols False M.empty pu
   in  foldl' blSymbols puSignatureSymbols $ programUnitBody pu
-
--- lower bound always defaults to 1
-data Dimension
-  = DimensionDynamic (Maybe Int)
-  -- ^ dynamic dimension: no upper bound, optional lower bound
-
-  | DimensionStatic  (Maybe Int) Int
-  -- ^ static dimension: known upper bound, optional lower bound
-
-coerceDimensionList :: [Dimension] -> Maybe Dimensions
-coerceDimensionList = const Nothing -- TODO
-
--- | Evaluate array dimension information.
---
--- There are essentially three possible return values:
---
---   * static-size array, where all dimensions are fully defined
---   * assumed-size array, where final dimension is dynamic
---   * other (e.g. assumed-shape, unsupported), all information discarded
-resolveDims
-  :: SymbolTable -> [DimensionDeclarator a] -> Maybe Dimensions
-resolveDims symt =
-    coerceDimensionList . fromMaybe [] . sequence . map (resolveDim symt)
-
--- `Nothing` means totally invalid.
-resolveDim
-  :: SymbolTable -> DimensionDeclarator a -> Maybe Dimension
-resolveDim symt (DimensionDeclarator _ _ lb ub) =
-    case ub of
-      Just (ExpValue _ _ ValStar) -> do
-        -- final dimension is @*@: assumed-size
-        -- note that we can't represent a lower bound here due to the data
-        -- type. oops. TODO
-        pure $ DimensionDynamic mlbv
-      _ -> do
-        case ub of
-          Nothing -> Nothing
-          Just jub -> do
-            ubv <- resolveDimBound symt jub
-            pure $ DimensionStatic  mlbv ubv
-  where
-    mlbv = case lb of Nothing -> Nothing; Just jlb -> resolveDimBound symt jlb
-
--- note that we don't handle @*@ here. do that manually, for the last dimension
--- (and only for the upper bound -- TODO I think? check standard). if it's not
--- the last dimension, it's not an assumed-size array and so we can throw
--- everything out
-resolveDimBound
-  :: SymbolTable -> Expression a -> Maybe Int
-resolveDimBound symt = \case
-  ExpValue _ _ (ValVariable name) ->
-    case M.lookup name symt of
-      Just (SParameter _ (Int i)) -> Just i
-      _                           -> Nothing
-  e ->
-    case eval' symt e of
-      Right (Int i) -> Just i
-      _             -> Nothing

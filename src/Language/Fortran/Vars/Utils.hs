@@ -33,9 +33,9 @@ typeSpecToArrayType st dims tySpec =
  where
   scalarTy = typeSpecToScalarType st tySpec
   go (DimensionDeclarator _ _ (Just lb) (Just ub)) dims =
-      Dim (constInt lb) (constInt ub) : dims
+      Dim (Just (constInt lb)) (Just (constInt ub)) : dims
   go (DimensionDeclarator _ _ Nothing   (Just ub)) dims =
-      Dim 1 (constInt ub) : dims
+      Dim (Just 1) (Just (constInt ub)) : dims
   go _ _ = error "Invalid dimension declarator"
   constInt x = case eval st x of
     Int y -> y
