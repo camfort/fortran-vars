@@ -50,6 +50,7 @@ library
       Language.Fortran.Vars.StorageClass
       Language.Fortran.Vars.StructureTable
       Language.Fortran.Vars.SymbolTable
+      Language.Fortran.Vars.SymbolTable.Arrays
       Language.Fortran.Vars.TypeCheck
       Language.Fortran.Vars.Types
       Language.Fortran.Vars.Union
