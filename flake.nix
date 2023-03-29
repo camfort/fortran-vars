@@ -4,7 +4,7 @@
     flake-parts.url = "github:hercules-ci/flake-parts";
     haskell-flake.url = "github:srid/haskell-flake";
     fortran-src = {
-      url = "github:camfort/fortran-src";
+      url = "github:camfort/fortran-src/semtype-dimensions-maybe";
       flake = false;
     };
     fortran-src-extras = {
