@@ -1,7 +1,15 @@
+{-
+TODO 2023-04-17 raehik
+
+  * dummyOf, isDynamic etc. are a little dangerous, repeating the same checks in
+    slightly different ways. May become further fragile with the dimension
+    representation change.
+-}
+
 module SymbolTableSpec where
 
 import           Test.Hspec
-import           Util ( des1 )
+import           Util ( des1, des1' )
 
 import           Control.Exception              ( evaluate )
 import           Language.Fortran.Extras.Analysis
@@ -89,7 +97,10 @@ dummyOf name symTable =
         SDummy (TArray (TCharacter CharLenStar _) _) ->
           "DummyArrayDynamicCharacter"
         SDummy (TCharacter CharLenStar _) -> "DummyDynamicCharacter"
-        SDummy (TArray _ DimsExplicitShape{}) -> "DummyStaticArray"
+        SDummy (TArray _ ds@DimsExplicitShape{}) ->
+          case getStaticArrayBounds ds of
+            Nothing -> "DummyDynamicArray"
+            Just{}  -> "DummyStaticArray"
         SDummy (TArray _ _) -> "DummyDynamicArray"
         SDummy _ -> "DummyStaticScalar"
         v -> error (name ++ " is not a DummyVariableEntry it is a " ++ show v)
@@ -99,11 +110,21 @@ isDummy name symTable = case M.lookup name symTable of
   Just SDummy{} -> True
   _             -> False
 
+-- | Is the given symbol "dynamic" in the given symbol table?
+--
+-- e.g. an explicit-shape array with constant bounds is not dynamic, but an
+-- explicit-shape array with a dummy variable for an upper bound is dynamic.
+--
+-- Arrays are checked using a fortran-src util to convert dynamic-and-static
+-- dimension representations to purely static ones.
 isDynamic :: String -> SymbolTable -> Bool
 isDynamic name symTable = case M.lookup name symTable of
   Just (SVariable ty _) -> case ty of
     TArray (TCharacter CharLenStar _) _ -> True
-    TArray _ DimsExplicitShape{} -> False
+    TArray _ ds@DimsExplicitShape{} ->
+      case getStaticArrayBounds ds of
+        Nothing -> True
+        Just{}  -> False
     TArray _ _ -> True
     TCharacter CharLenStar _ -> True
     _ -> False
@@ -345,7 +366,7 @@ spec = do
       typeOf "stscalar1" symTable `shouldBe` TInteger 4
 
       dummyOf "starr1" symTable `shouldBe` "DummyStaticArray"
-      typeOf "starr1" symTable `shouldBe` TArray (TInteger 4) (des1 1 5)
+      typeOf "starr1" symTable `shouldBe` TArray (TInteger 4) (des1' (Just 5))
 
     it "Dummy variables - dynamic" $ do
       contents <- flexReadFile path
@@ -357,16 +378,16 @@ spec = do
       typeOf "dynarr1" symTable `shouldBe` TArray (TInteger 4) (DimsAssumedSize Nothing (Just 1))
 
       dummyOf "dynarr2" symTable `shouldBe` "DummyDynamicArray"
-      typeOf "dynarr2" symTable `shouldBe` TArray (TInteger 4) undefined
+      typeOf "dynarr2" symTable `shouldBe` TArray (TInteger 4) (des1' Nothing)
 
       dummyOf "dynarr3" symTable `shouldBe` "DummyDynamicArray"
       typeOf "dynarr3" symTable `shouldBe` TArray (TInteger 4) (DimsAssumedSize (Just (Dim (Just 1) (Just 3) :| [])) (Just 1))
 
       dummyOf "dynarr4" symTable `shouldBe` "DummyDynamicArray"
-      typeOf "dynarr4" symTable `shouldBe` TArray (TInteger 4) undefined
+      typeOf "dynarr4" symTable `shouldBe` TArray (TInteger 4) (DimsExplicitShape (Dim (Just 1) (Just 3) :| [Dim (Just 1) Nothing]))
 
       evaluate (dummyOf "dynarr5" symTable) `shouldThrow` anyErrorCall
-      typeOf "dynarr5" symTable `shouldBe` TArray (TInteger 4) undefined
+      typeOf "dynarr5" symTable `shouldBe` TArray (TInteger 4) (des1' Nothing)
 
   describe "Dummy array of dynamically-sized strings" $ do
     let path     = "test/symbol_table/dummy_array_dynamic_strings.f"
@@ -403,7 +424,7 @@ spec = do
       symTable <- getSymTableIO path_interface contents unitName
 
       typeOf "sespit_get_psetdt" symTable
-        `shouldBe` TArray (TInteger 2) (des1 1 3)
+        `shouldBe` TArray (TInteger 2) (des1' (Just 3))
       typeOf "sespit_get_psetdt2_e" symTable `shouldBe` TInteger 2
       -- Check we don't pick up subroutines or arguments
       M.member "index" symTable `shouldBe` False
@@ -585,31 +606,31 @@ spec = do
     it "Dynamic array" $ do
       contents <- flexReadFile path
       let symTable = getSymTable path contents "f2"
-      typeOf "arr" symTable `shouldBe` TArray (TInteger 4) undefined
+      typeOf "arr" symTable `shouldBe` TArray (TInteger 4) (DimsExplicitShape (Dim (Just 1) Nothing :| []))
       isDynamic "arr" symTable `shouldBe` True
 
     it "Dynamic character Dynamic array" $ do
       contents <- flexReadFile path
       let st = getSymTable path contents "f3"
-      typeOf "arr" st `shouldBe` TArray (TCharacter CharLenStar 1) undefined
+      typeOf "arr" st `shouldBe` TArray (TCharacter CharLenStar 1) (des1' Nothing)
       isDynamic "arr" st `shouldBe` True
 
     it "Dynamic character static array" $ do
       contents <- flexReadFile path
       let st = getSymTable path contents "f4"
       typeOf "arr" st
-        `shouldBe` TArray (TCharacter CharLenStar 1) (des1 1 5)
+        `shouldBe` TArray (TCharacter CharLenStar 1) (des1' (Just 5))
       isDynamic "arr" st `shouldBe` True
 
     it "Static character dynamic array" $ do
       contents <- flexReadFile path
       let st = getSymTable path contents "f5"
-      typeOf "arr" st `shouldBe` TArray (TCharacter (CharLenInt 5) 1) undefined
+      typeOf "arr" st `shouldBe` TArray (TCharacter (CharLenInt 5) 1) (des1' Nothing)
       isDynamic "arr" st `shouldBe` True
 
     it "Dummy not dynamic" $ do
       contents <- flexReadFile path
       let st = getSymTable path contents "f6"
-      typeOf "arr" st `shouldBe` TArray (TCharacter CharLenStar 1) undefined
+      typeOf "arr" st `shouldBe` TArray (TCharacter CharLenStar 1) (des1' Nothing)
       isDynamic "arr" st `shouldBe` False
       isDummy "arr" st `shouldBe` True
