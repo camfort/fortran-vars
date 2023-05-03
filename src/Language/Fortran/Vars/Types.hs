@@ -7,14 +7,14 @@ module Language.Fortran.Vars.Types
   , Type
   , SemType(..)
   , Dim(..), Dims(..), Dimensions, dimensionsToTuples, dimensionsToTuples'
-  , dimsTraverse, getStaticArrayBounds
+  , dimsTraverse, dimsLength, getStaticArrayBounds
   , CharacterLen(..)
   , Kind
   , ExpVal(..)
   )
 where
 
-import           Language.Fortran.Common.Array ( dimsTraverse )
+import           Language.Fortran.Common.Array ( dimsTraverse, dimsLength )
 import           Language.Fortran.Vars.Orphans()
 import           Language.Fortran.Vars.Repr
 import           Data.Aeson                     ( FromJSON

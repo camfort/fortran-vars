@@ -111,13 +111,12 @@ substringCPValue
   -> Maybe (Expression (Analysis a))
   -> CPValue
 substringCPValue symTable memTables e is mb me =
-  let errStr         = "Array sections are not allowed in FORTRAN 77"
-      name           = srcName e
+  let name           = srcName e
       isArraySection = case fromJust $ M.lookup name symTable of
-        (SVariable (TArray _ dims) _) -> length is < length dims
+        (SVariable (TArray _ dims) _) -> length is < dimsLength dims
         _                             -> False
   in  if isArraySection
-        then error errStr
+        then errArraySection
         else case lookupArray symTable memTables name is of
           Top -> Top
           Bot -> Bot
@@ -126,7 +125,9 @@ substringCPValue symTable memTables e is mb me =
               Just (b', e') ->
                 Const . Str $ take (e' - b' + 1) $ drop (b' - 1) s
               Nothing -> Bot
-          _ -> error errStr
+          _ -> errArraySection
+  where
+    errArraySection = error "Array sections are not allowed in FORTRAN 77"
 
 -- | Given 'SymbolTable', 'MemoryTables' and an 'Expression', determine the 'CPValue'
 -- of the 'Expression'

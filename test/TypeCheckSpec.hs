@@ -1,7 +1,7 @@
 module TypeCheckSpec where
 
 import           Test.Hspec
-import           Util ( des1 )
+import           Util ( dess1 )
 import           Control.Monad                  ( zipWithM_ )
 import           Data.Either                    ( isLeft )
 import           Data.List                      ( find )
@@ -183,8 +183,8 @@ spec = do
 
     it "Index ranges" $ do
       (typeof, rhs) <- helper path puName
-      typeof (rhs "i1") `shouldBe` Right (TArray (TInteger 4) (des1 1 10))
-      typeof (rhs "i2") `shouldBe` Right (TArray (TInteger 4) (des1 1 10))
+      typeof (rhs "i1") `shouldBe` Right (TArray (TInteger 4) (dess1 1 10))
+      typeof (rhs "i2") `shouldBe` Right (TArray (TInteger 4) (dess1 1 10))
       typeof (rhs "i3") `shouldBe` Right (TArray (TInteger 4) (DimsExplicitShape (Dim (Just 1) Nothing :| [])))
 
     it "Erroneous expressions" $ do

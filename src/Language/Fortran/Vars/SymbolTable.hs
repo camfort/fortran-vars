@@ -60,6 +60,8 @@ import           Language.Fortran.Vars.Kind     ( getKind
                                                 , isStr
                                                 )
 
+{- TODO 2023-05-02 raehik: no longer used?
+
 -- | Given a 'SymbolTable' and a 'DimensionDeclarator', return a pair of
 -- resolved 'DynamicDimensionElement's representing lower- and upper- bound
 resolveDimensionDimensionDeclarator
@@ -79,6 +81,8 @@ resolveDimensionDimensionDeclarator symTable (DimensionDeclarator _ _ lowerbound
     Right (Int i) -> Just i
     _             -> Nothing
   valueOf Nothing = Just 1
+
+-}
 
 -- Parameter declarations
 -- A parameter may or may not have a type declaration. If it does have one,
@@ -276,7 +280,8 @@ stSymbols symTable = \case
     Declarator _ _ v (ArrayDecl d) _ _ -> Just (v, aStrip d)
     Declarator _ _ _ ScalarDecl    _ _ -> Nothing
 
--- | Try to upgrade an existing scalar variable to an array variable.
+-- | Upgrade an existing scalar variable to an array variable with the given
+--   dimension information and return the updated 'SymbolTable'.
 --
 -- Returns the unchanged 'SymbolTable' if the variable didn't exist. If the
 -- variable was already an array type, runtime error.
@@ -300,10 +305,11 @@ upgradeScalarToArray symbol dimDecls symTable =
         <> " is array-typed variable."
         <> " Invalid fortran syntax (Duplicate DIMENSION attribute)"
     Just (SVariable ty loc) ->
-      let dims = undefined
-      -- traverse (resolveDimensionDimensionDeclarator symTable) (aStrip dimDecls)
-          entry = SVariable (TArray ty dims) loc
-      in  M.insert symbol entry symTable
+      case resolveDims symTable (aStrip dimDecls) of
+        Nothing -> error "TODO invalid DIMENSION attribute while upgrading a scalar to array"
+        Just dims ->
+          let entry = SVariable (TArray ty dims) loc
+          in  M.insert symbol entry symTable
     _ -> symTable
 
 -- | Given a 'Bool', 'SymbolTable' and a 'ProgramUnit', return an updated
