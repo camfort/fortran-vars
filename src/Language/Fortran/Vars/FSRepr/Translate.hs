@@ -1,4 +1,8 @@
-{- TODO
+{- | Translate fortran-vars Fortran types and values to fortran-src
+     (Language.Fortran.Repr).
+
+TODO
+
   * BYTE is apparently LOGICAL(1). Or INTEGER(1) (same thing?). Could make a
     special check for that.
 -}
