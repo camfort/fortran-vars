@@ -36,7 +36,6 @@ library
       Language.Fortran.Vars.Equivalence
       Language.Fortran.Vars.Errors
       Language.Fortran.Vars.Eval
-      Language.Fortran.Vars.FSRepr.Eval
       Language.Fortran.Vars.FSRepr.Translate
       Language.Fortran.Vars.Kind
       Language.Fortran.Vars.Memory
@@ -46,7 +45,6 @@ library
       Language.Fortran.Vars.PureExpression
       Language.Fortran.Vars.Range
       Language.Fortran.Vars.Repr
-      Language.Fortran.Vars.ReprFS.Type
       Language.Fortran.Vars.StorageClass
       Language.Fortran.Vars.StructureTable
       Language.Fortran.Vars.SymbolTable
