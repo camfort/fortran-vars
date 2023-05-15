@@ -7,9 +7,9 @@ TODO
     special check for that.
 -}
 
-module Language.Fortran.Vars.FSRepr.Translate where
+module Language.Fortran.Vars.Eval.FortranSrc.Translate where
 
-import qualified Language.Fortran.Vars.Repr as FV
+import qualified Language.Fortran.Vars.Rep as FV
 import qualified Language.Fortran.AST.Literal.Boz as AST
 
 import Language.Fortran.Repr

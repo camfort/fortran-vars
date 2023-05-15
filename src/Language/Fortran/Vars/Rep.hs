@@ -1,11 +1,19 @@
-module Language.Fortran.Vars.Repr
-  ( Type
-  , F.SemType(..)
-  , F.CharacterLen(..)
-  , ExpVal(..)
+-- | Definitions for representing Fortran values and types.
+
+module Language.Fortran.Vars.Rep
+  (
+  -- * Types
+    F.SemType(..)
   , F.Kind
-  , F.Dim(..), F.Dims(..)
-  , F.Dimensions, F.dimensionsToTuples
+  , F.CharacterLen(..)
+  , F.Dimensions, F.Dim(..), F.Dims(..)
+
+  -- ** Compatibility
+  , F.dimensionsToTuples
+  , Type
+
+  -- * Values
+  , ExpVal(..)
   ) where
 
 import qualified Language.Fortran.Analysis.SemanticTypes as F
@@ -19,8 +27,11 @@ import Control.DeepSeq ( NFData )
 import GHC.Generics ( Generic )
 import Data.Data ( Data )
 
--- | WARNING: This type synonym may cause hassle with later GHC versions
---   (>=8.x?), due to the kind of concrete types changing from @*@ to @Type@.
+-- TODO raehik 2023-05-15: consider deprecating. GHC is very gradually changing
+-- the kind of concrete types from @*@ to @Type@. Language extension
+-- @NoStarIsType@ makes that change, and will eventually become default. @type
+-- Type@ will probably break with that on (due to the way kind/type/term
+-- namespaces are searched).
 type Type = F.SemType
 
 -- | The evaluated value of a FORTRAN expression.
