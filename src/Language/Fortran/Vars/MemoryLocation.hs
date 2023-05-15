@@ -30,7 +30,6 @@ import           Language.Fortran.Vars.Types    ( SymbolTableEntry(..)
                                                 , Offset
                                                 , SymbolTable
                                                 , Dim(..), Dimensions
-                                                , dimensionsToTuples'
                                                 , dimensionsToTuples
                                                 )
 

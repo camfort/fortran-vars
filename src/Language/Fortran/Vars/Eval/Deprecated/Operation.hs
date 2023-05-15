@@ -1,4 +1,4 @@
-module Language.Fortran.Vars.Operation
+module Language.Fortran.Vars.Eval.Deprecated.Operation
   ( valueToExpVal'
   , valueToExpVal
   , transformEither

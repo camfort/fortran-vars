@@ -3,20 +3,23 @@
 {-# LANGUAGE DeriveAnyClass #-}
 
 module Language.Fortran.Vars.Types
-  ( module Language.Fortran.Vars.Types
+  ( module Language.Fortran.Vars.Types.SymbolTable
+  , module Language.Fortran.Vars.Types
   , Type
   , SemType(..)
-  , Dim(..), Dims(..), Dimensions, dimensionsToTuples, dimensionsToTuples'
-  , dimsTraverse, dimsLength, getStaticArrayBounds
+  , Dim(..), Dims(..), Dimensions, dimensionsToTuples
+  , dimsTraverse, dimsLength
   , CharacterLen(..)
   , Kind
   , ExpVal(..)
   )
 where
 
+import Language.Fortran.Vars.Types.SymbolTable
+
 import           Language.Fortran.Common.Array ( dimsTraverse, dimsLength )
 import           Language.Fortran.Vars.Orphans()
-import           Language.Fortran.Vars.Repr
+import           Language.Fortran.Vars.Rep
 import           Data.Aeson                     ( FromJSON
                                                 , ToJSON
                                                 )
@@ -32,16 +35,6 @@ import           Language.Fortran.Util.Position ( SrcSpan(..)
                                                 , Position(..)
                                                 )
 
--- | Memory offset given to a variable in memory
-type Offset = Int
-
--- | The name of block of memory
-type MemoryBlockName = Name
-
--- | The location of a variable, i.e. the 'MemoryBlockName' that
--- contains it as well as the 'Offset' to its location in memory
-type Location = (MemoryBlockName, Offset)
-
 -- | The declared lifetimes of the variables in memory
 data StorageClass
   = Static
@@ -53,20 +46,6 @@ data StorageClass
 
 instance FromJSON StorageClass
 instance ToJSON StorageClass
-
--- | An entry in the 'SymbolTable' for some variable
-data SymbolTableEntry
-  = SParameter { parType :: Type , parVal :: ExpVal }
-  | SVariable { varType :: Type , varLoc :: Location }
-  | SDummy { dumType :: Type }
-  | SExternal {extType :: Type }
-  deriving (Eq, Ord, Show, Data, Typeable, Generic)
-
-instance FromJSON SymbolTableEntry
-instance ToJSON SymbolTableEntry
-
--- | Symbol table containing all non-intrisic symbols declared in a program
-type SymbolTable = Map Name SymbolTableEntry
 
 -- | Structure to hold information about the named blocks of memory
 -- in the program
@@ -113,12 +92,12 @@ data TypeError
   | UnknownField String
   deriving (Eq, Ord, Show, Generic)
 
--- | Helper method for getting the FilePath out of SrcSpan
-typeError :: SrcSpan -> String -> TypeError
-typeError sp = let SrcSpan p _ = sp in TypeError (posFilePath p) sp
-
 instance ToJSON TypeError
 instance FromJSON TypeError
+
+-- | Construct a 'TypeError' using a 'SrcSpan', using the 'FilePath'.
+typeError :: SrcSpan -> String -> TypeError
+typeError sp = let SrcSpan p _ = sp in TypeError (posFilePath p) sp
 
 type TypeOf a = Expression a -> Either TypeError Type
 

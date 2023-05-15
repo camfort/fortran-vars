@@ -30,27 +30,30 @@ library
       Language.Fortran.Vars.BozConstant
       Language.Fortran.Vars.Call
       Language.Fortran.Vars.CommonLayout
-      Language.Fortran.Vars.ConstantPropagation
-      Language.Fortran.Vars.CPValue
       Language.Fortran.Vars.Dummy
       Language.Fortran.Vars.Equivalence
       Language.Fortran.Vars.Errors
       Language.Fortran.Vars.Eval
-      Language.Fortran.Vars.FSRepr.Translate
+      Language.Fortran.Vars.Eval.Deprecated
+      Language.Fortran.Vars.Eval.Deprecated.ConstantPropagation
+      Language.Fortran.Vars.Eval.Deprecated.CPValue
+      Language.Fortran.Vars.Eval.Deprecated.Operation
+      Language.Fortran.Vars.Eval.FortranSrc
+      Language.Fortran.Vars.Eval.FortranSrc.Translate
       Language.Fortran.Vars.Kind
       Language.Fortran.Vars.Memory
       Language.Fortran.Vars.MemoryLocation
-      Language.Fortran.Vars.Operation
       Language.Fortran.Vars.Orphans
       Language.Fortran.Vars.PureExpression
       Language.Fortran.Vars.Range
-      Language.Fortran.Vars.Repr
+      Language.Fortran.Vars.Rep
       Language.Fortran.Vars.StorageClass
       Language.Fortran.Vars.StructureTable
       Language.Fortran.Vars.SymbolTable
       Language.Fortran.Vars.SymbolTable.Arrays
       Language.Fortran.Vars.TypeCheck
       Language.Fortran.Vars.Types
+      Language.Fortran.Vars.Types.SymbolTable
       Language.Fortran.Vars.Union
       Language.Fortran.Vars.Utils
   other-modules:

@@ -2,7 +2,7 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-module Language.Fortran.Vars.CPValue
+module Language.Fortran.Vars.Eval.Deprecated.CPValue
   ( CPValue(..)
   , meet
   , unaryOper
@@ -15,7 +15,7 @@ where
 
 import           Language.Fortran.Vars.Types
                                                 ( ExpVal(..) )
-import           Language.Fortran.Vars.Operation
+import           Language.Fortran.Vars.Eval.Deprecated.Operation
                                                 ( unaryOp
                                                 , binaryOp
                                                 )
