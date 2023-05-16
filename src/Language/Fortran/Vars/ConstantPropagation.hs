@@ -1,7 +1,7 @@
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module Language.Fortran.Vars.Eval.Deprecated.ConstantPropagation
+module Language.Fortran.Vars.ConstantPropagation
   ( constantPropagationValue
   , ValueOf
   )
@@ -20,7 +20,7 @@ import           Language.Fortran.Vars.Eval.Deprecated.Operation
                                                 ( valueToExpVal )
 import           Language.Fortran.Vars.MemoryLocation
                                                 ( generateLinearizedIndexRange )
-import           Language.Fortran.Vars.Eval.Deprecated.CPValue
+import           Language.Fortran.Vars.CPValue
                                                 ( CPValue(..)
                                                 , meet
                                                 , unaryOper

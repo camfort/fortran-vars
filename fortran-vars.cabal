@@ -30,13 +30,13 @@ library
       Language.Fortran.Vars.BozConstant
       Language.Fortran.Vars.Call
       Language.Fortran.Vars.CommonLayout
+      Language.Fortran.Vars.ConstantPropagation
+      Language.Fortran.Vars.CPValue
       Language.Fortran.Vars.Dummy
       Language.Fortran.Vars.Equivalence
       Language.Fortran.Vars.Errors
       Language.Fortran.Vars.Eval
       Language.Fortran.Vars.Eval.Deprecated
-      Language.Fortran.Vars.Eval.Deprecated.ConstantPropagation
-      Language.Fortran.Vars.Eval.Deprecated.CPValue
       Language.Fortran.Vars.Eval.Deprecated.Operation
       Language.Fortran.Vars.Eval.FortranSrc
       Language.Fortran.Vars.Eval.FortranSrc.Translate
