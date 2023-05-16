@@ -1,3 +1,16 @@
+## 0.4.0 (Unreleased)
+  * Replace expression evaluator with fortran-src one
+    * Interface changes are mostly non-breaking. Some behaviour may be slightly
+      different due to INTEGER etc. constants using different types.
+    * Old evaluator remains available at
+      `Language.Fortran.Vars.Eval.Deprecated` (and still gets used by constant
+      propagation code).
+    * Short-circuiting evaluator uses the old evaluator. (This is feasible for
+      the fortran-src evaluator, and is pending work.)
+  * Use more precise array dimensions encoding
+    * Breaking change.
+  * Update to fortran-src 0.15
+
 ## 0.3.1 (22 Aug 2022)
   * Update to fortran-src 0.10.2
   * Do some type checking for logical operators used with non LOGICAL arguments
