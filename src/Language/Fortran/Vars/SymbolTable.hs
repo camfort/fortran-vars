@@ -92,6 +92,16 @@ handleParameter
 handleParameter symTable alist = foldl' f symTable (aStrip alist)
  where
   -- special case: immediate BOZ constant
+  -- The fortran-src evaluator doesn't look at binder when evaluating, so can't
+  -- see the kind. The deprecated fortran-vars evaluator did. So tests of this
+  -- form used to work, but now fail:
+  --
+  --    INTEGER*2 i2
+  --    PARAMETER(i2 = '8000'x)
+  --
+  -- This special case catches only these (and only for INTEGERs).
+  --
+  -- raehik thinks the proper way to do this is the @INT(boz, kind)@ intrinsic.
   f symt (Declarator _ _ varExp ScalarDecl _ (Just (ExpValue _ _ (ValBoz boz)))) =
       let symbol = srcName varExp
        in case M.lookup symbol symt of
