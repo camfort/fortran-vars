@@ -2,6 +2,42 @@
 For changes localized to fortran-src, see `upgrade-guide.md` in [fortran-src's
 repository](https://github.com/camfort/fortran-src).
 
+## Release 0.4.0
+### Using fortran-src 0.15.0
+***Necessitates changes.***
+
+The primary change is to how array dimensions in `SemanticType` (the Fortran
+type representation in fortran-vars) are represented. See the relevant subheader
+for details.
+
+### Extended dimensions representation
+fortran-vars previously represented array dimensions with a type synonym:
+
+```haskell
+type Dims = [(Int, Int)]
+```
+
+fortran-src now provides TODO
+
+```
+data Dims t a
+  -- | Explicit-shape array. All dimensions are known.
+  = DimsExplicitShape
+      (t (Dim a)) -- ^ list of all dimensions
+
+  -- | Assumed-size array. The final dimension has no upper bound (it is
+  --   obtained from its effective argument). Earlier dimensions may be defined
+  --   like explicit-shape arrays.
+  | DimsAssumedSize
+      (Maybe (t (Dim a))) -- ^ list of all dimensions except last
+      a                   -- ^ lower bound of last dimension
+
+  -- | Assumed-shape array. Shape is taken from effective argument. We store the
+  --   lower bound for each dimension, and thus also the rank (via list length).
+  | DimsAssumedShape
+      (t a) -- ^ list of lower bounds
+```
+
 ## Release 0.3.0
 ### Using fortran-src 0.8.0
 ***Necessitates changes.***
