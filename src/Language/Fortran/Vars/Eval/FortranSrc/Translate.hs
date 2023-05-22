@@ -30,6 +30,7 @@ translateFScalarType = \case
   FSTReal    ftreal -> kinded FV.TReal    ftreal
   FSTComplex ftreal -> kinded FV.TComplex (FTComplexWrapper ftreal)
   FSTLogical ftint  -> kinded FV.TInteger ftint
+  --FSTLogical ftint  -> kinded FV.TLogical ftint
   FSTString  n      -> FV.TCharacter (FV.CharLenInt (fromIntegral n)) 1
   FSTCustom  ty     -> FV.TCustom ty
   where kinded f = f . translateFKind . printFKind
