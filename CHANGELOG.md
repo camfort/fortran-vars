@@ -1,4 +1,4 @@
-## 0.4.0 (Unreleased)
+## 0.4.0 (22 Jun 2023)
   * Replace expression evaluator with fortran-src one
     * Interface changes are mostly non-breaking. Some behaviour may be slightly
       different due to INTEGER etc. constants using different types.

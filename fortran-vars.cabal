@@ -5,7 +5,7 @@ cabal-version: 1.12
 -- see: https://github.com/sol/hpack
 
 name:           fortran-vars
-version:        0.3.1
+version:        0.4.0
 synopsis:       Fortran memory model and other static analysis tools.
 description:    Various Fortran static analysis tools focusing on a memory model for Fortran types. Uses fortran-src for the syntax representation.
 category:       Language
