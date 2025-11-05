@@ -75,6 +75,7 @@ dependencies:
 - deepseq >=1.4.4.0
 - fortran-src-extras ^>= 0.5.0
 - mtl # TODO ver
+- optparse-applicative ==0.17.1.0
 
 library:
   source-dirs: src
