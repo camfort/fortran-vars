@@ -7,17 +7,26 @@ import           Language.Fortran.Extras
 import           Language.Fortran.Vars          ( programFileModel )
 import           Language.Fortran.Vars.Types    ( ProgramFileModel
                                                 , SymbolTableEntry(..)
+                                                , MemoryBlock(..)
                                                 )
 import           Language.Fortran.AST           ( ProgramUnitName(..) )
+import           Language.Fortran.Vars.Rep      ( Type
+                                                , ExpVal(..)
+                                                )
+import           Language.Fortran.PrettyPrint   ( pprintAndRender )
+import           Language.Fortran.Version       ( FortranVersion(..) )
 
 import qualified Data.ByteString.Lazy.Char8    as LB
 import qualified Data.Map                      as M
+import           Data.List                      ( intercalate )
 import           Control.Monad                  ( unless )
 import           System.Environment             ( getArgs )
 import           Text.Printf                    ( printf )
-import           Options.Applicative
-
-import qualified Language.Fortran.Parser as Parser
+import           Options.Applicative            ( Parser
+                                                , long
+                                                , help
+                                                , flag
+                                                )
 
 programDesc, programHeader :: String
 programDesc =
@@ -26,7 +35,7 @@ programHeader = programDesc
 
 main :: IO ()
 main = do
-  args <- getArgs
+  _ <- getArgs
   withToolOptionsAndProgramAnalysis programDesc programHeader prettyFlagParser $ \prettyFlag pf -> do
     let pfm = programFileModel pf
     unless (M.null pfm) $ 
@@ -41,60 +50,95 @@ prettyFlagParser =
       <> help "Pretty print the program file model as an ASCII table"
     )
 
--- | Pretty print the program file model as an ASCII table
+-- | Pretty print the program file model as an ASCII table showing detailed information
 prettyPrintModel :: ProgramFileModel -> String
-prettyPrintModel pfm = unlines $ [header, separator] ++ rows ++ [separator, footer]
+prettyPrintModel pfm = unlines $ concatMap formatProgramUnit (M.toList pfm)
   where
-    -- Column widths
-    nameWidth = 30
-    symbolsWidth = 12
-    paramsWidth = 12
-    varsWidth = 12
-    blocksWidth = 12
+    formatProgramUnit (punName, (symTable, storageTable)) =
+      let unitName = showPUN punName
+          unitHeader = "\n" ++ replicate 100 '=' ++ "\n" 
+                    ++ "Program Unit: " ++ unitName ++ "\n"
+                    ++ replicate 100 '='
+          combinedTable = if M.null symTable
+                          then "\n(No symbols)"
+                          else formatCombinedTable symTable storageTable
+      in [unitHeader, combinedTable]
     
-    -- Table structure
-    header = printf "| %-*s | %-*s | %-*s | %-*s | %-*s |" 
-      nameWidth "Program Unit"
-      symbolsWidth "Symbols"
-      paramsWidth "Parameters"
-      varsWidth "Variables"
-      blocksWidth "Memory Blocks"
+    formatCombinedTable symTable storageTable = 
+      let tableHeader = "\n\n" ++ combinedHeader ++ "\n" ++ combinedSep
+          symRows = map (formatSymbol storageTable) (M.toList symTable)
+      in unlines (tableHeader : symRows ++ [combinedSep])
     
-    separator = "+" ++ replicate (nameWidth + 2) '-' 
-             ++ "+" ++ replicate (symbolsWidth + 2) '-'
-             ++ "+" ++ replicate (paramsWidth + 2) '-'
-             ++ "+" ++ replicate (varsWidth + 2) '-'
-             ++ "+" ++ replicate (blocksWidth + 2) '-' ++ "+"
+    -- Column widths for combined table
+    nameW = 20
+    tagW = 10
+    typeW = 30
+    blockW = 15
+    offsetW = 8
+    sizeW = 10
+    classW = 12
     
-    rows = map formatUnit (M.toList pfm)
+    combinedHeader = printf "| %-*s | %-*s | %-*s | %-*s | %-*s | %-*s | %-*s |"
+      nameW "Name" tagW "Tag" typeW "Type" blockW "Block/Value" offsetW "Offset" sizeW "Size" classW "Class"
     
-    formatUnit (punName, (symTable, storageTable)) =
-      let totalSyms = M.size symTable
-          params = length $ filter isParameter $ M.elems symTable
-          vars = length $ filter isVariable $ M.elems symTable
-          blocks = M.size storageTable
-          name = showPUN punName
-      in printf "| %-*s | %*d | %*d | %*d | %*d |"
-           nameWidth (truncate' nameWidth name)
-           (symbolsWidth - 1) totalSyms
-           (paramsWidth - 1) params
-           (varsWidth - 1) vars
-           (blocksWidth - 1) blocks
+    combinedSep = "+" ++ replicate (nameW + 2) '-'
+               ++ "+" ++ replicate (tagW + 2) '-'
+               ++ "+" ++ replicate (typeW + 2) '-'
+               ++ "+" ++ replicate (blockW + 2) '-'
+               ++ "+" ++ replicate (offsetW + 2) '-'
+               ++ "+" ++ replicate (sizeW + 2) '-'
+               ++ "+" ++ replicate (classW + 2) '-' ++ "+"
     
-    footer = printf "| %-*s | %*d | %*d | %*d | %*d |"
-      nameWidth "TOTAL"
-      (symbolsWidth - 1) (sum [M.size st | (st, _) <- M.elems pfm])
-      (paramsWidth - 1) (sum [length $ filter isParameter $ M.elems st | (st, _) <- M.elems pfm])
-      (varsWidth - 1) (sum [length $ filter isVariable $ M.elems st | (st, _) <- M.elems pfm])
-      (blocksWidth - 1) (sum [M.size storage | (_, storage) <- M.elems pfm])
+    formatSymbol storageTable (name, entry) = case entry of
+      SParameter ty val -> 
+        printf "| %-*s | %-*s | %-*s | %-*s | %-*s | %-*s | %-*s |"
+          nameW (trunc nameW name)
+          tagW "Parameter"
+          typeW (trunc typeW $ showType ty)
+          blockW (trunc blockW $ showExpVal val)
+          offsetW ""
+          sizeW ""
+          classW "Constant"
+      
+      SVariable ty (blockName, offset) ->
+        let (sizeStr, classStr) = case M.lookup blockName storageTable of
+              Nothing -> ("", "")
+              Just memBlock -> 
+                let size = case blockSize memBlock of
+                      Just s -> show s
+                      Nothing -> "dynamic"
+                    cls = show $ storageClass memBlock
+                in (size, cls)
+        in printf "| %-*s | %-*s | %-*s | %-*s | %-*d | %-*s | %-*s |"
+             nameW (trunc nameW name)
+             tagW "Variable"
+             typeW (trunc typeW $ showType ty)
+             blockW (trunc blockW blockName)
+             offsetW offset
+             sizeW (trunc sizeW sizeStr)
+             classW (trunc classW classStr)
+      
+      SDummy ty ->
+        printf "| %-*s | %-*s | %-*s | %-*s | %-*s | %-*s | %-*s |"
+          nameW (trunc nameW name)
+          tagW "Dummy"
+          typeW (trunc typeW $ showType ty)
+          blockW ""
+          offsetW ""
+          sizeW ""
+          classW ""
+      
+      SExternal ty ->
+        printf "| %-*s | %-*s | %-*s | %-*s | %-*s | %-*s | %-*s |"
+          nameW (trunc nameW name)
+          tagW "External"
+          typeW (trunc typeW $ showType ty)
+          blockW ""
+          offsetW ""
+          sizeW ""
+          classW ""
     
-    isParameter (SParameter _ _) = True
-    isParameter _ = False
-    
-    isVariable (SVariable _ _) = True
-    isVariable _ = False
-    
-    truncate' n s 
+    trunc n s 
       | length s <= n = s
       | otherwise = take (n - 3) s ++ "..."
     
@@ -102,3 +146,14 @@ prettyPrintModel pfm = unlines $ [header, separator] ++ rows ++ [separator, foot
     showPUN (NamelessBlockData) = "<anonymous block data>"
     showPUN (NamelessComment) = "<comment>"
     showPUN (NamelessMain) = "<main>"
+    
+    showExpVal (Int i) = show i
+    showExpVal (Real d) = show d
+    showExpVal (Str s) = show s
+    showExpVal (Logical b) = show b
+    showExpVal (Boz b) = show b
+
+-- | Format a type for display using fortran-src's pretty printer
+showType :: Type -> String
+showType ty = pprintAndRender Fortran90 ty (Just 0)
+
