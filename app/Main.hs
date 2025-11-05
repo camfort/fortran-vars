@@ -19,8 +19,6 @@ import           Options.Applicative
 
 import qualified Language.Fortran.Parser as Parser
 
-import qualified Language.Fortran.Extras.RunOptions as RO
-
 programDesc, programHeader :: String
 programDesc =
   "Generate symbol table and storage table from the AST of FORTRAN source"
