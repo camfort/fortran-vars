@@ -3,14 +3,20 @@ module Main where
 import           Language.Fortran.Extras.Encoding
                                                 ( commonEncode )
 import           Language.Fortran.Extras
-                                                ( withProgramAnalysis )
+                                                ( withToolOptionsAndProgramAnalysis )
 import           Language.Fortran.Vars          ( programFileModel )
+import           Language.Fortran.Vars.PrettyPrintModel
+                                                ( prettyPrintModel )
 
 import qualified Data.ByteString.Lazy.Char8    as LB
-
-import           Control.Monad                  ( unless )
 import qualified Data.Map                      as M
-                                                ( null )
+import           Control.Monad                  ( unless )
+import           System.Environment             ( getArgs )
+import           Options.Applicative            ( Parser
+                                                , long
+                                                , help
+                                                , flag
+                                                )
 
 programDesc, programHeader :: String
 programDesc =
@@ -18,7 +24,19 @@ programDesc =
 programHeader = programDesc
 
 main :: IO ()
-main = withProgramAnalysis programDesc programHeader $ \pf -> do
-    -- <String, (<String, Entry>,<String, MemoryBlock>)>
-  let pfm = programFileModel pf
-  unless (M.null pfm) $ LB.putStrLn $ commonEncode pfm
+main = do
+  _ <- getArgs
+  withToolOptionsAndProgramAnalysis programDesc programHeader prettyFlagParser $ \prettyFlag pf -> do
+    let pfm = programFileModel pf
+    unless (M.null pfm) $ 
+      if prettyFlag
+        then putStrLn $ prettyPrintModel pfm
+        else LB.putStrLn $ commonEncode pfm
+
+prettyFlagParser :: Parser Bool
+prettyFlagParser = 
+   flag False True
+      (  long "pretty"
+      <> help "Pretty print the program file model as an ASCII table"
+    )
+
