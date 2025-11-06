@@ -61,7 +61,7 @@ prettyPrintModel pfm = unlines $ concatMap formatProgramUnit (M.toList pfm)
                <> "+" <> replicate (sizeW + 2) '-'
                <> "+" <> replicate (classW + 2) '-' <> "+"
     
-    formatSymbol :: M.Map String MemoryBlock -> (String, SymbolTableEntry) -> String
+    formatSymbol :: M.Map MemoryBlockName MemoryBlock -> (String, SymbolTableEntry) -> String
     formatSymbol storageTable (name, entry) = case entry of
       SParameter ty val -> 
         printf "| %-*s | %-*s | %-*s | %-*s | %-*s | %-*s | %-*s |"
@@ -85,10 +85,10 @@ prettyPrintModel pfm = unlines $ concatMap formatProgramUnit (M.toList pfm)
         in printf "| %-*s | %-*s | %-*s | %-*s | %-*d | %-*s | %-*s |"
              nameW (trunc nameW name)
              tagW "Variable"
-             typeW (trunc typeW $ showType ty)
+             typeW  (trunc typeW $ showType ty)
              blockW (trunc blockW blockName)
              offsetW offset
-             sizeW (trunc sizeW sizeStr)
+             sizeW  (trunc sizeW sizeStr)
              classW (trunc classW classStr)
       
       SDummy ty ->
