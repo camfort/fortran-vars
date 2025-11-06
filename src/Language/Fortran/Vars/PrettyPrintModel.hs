@@ -7,6 +7,8 @@ module Language.Fortran.Vars.PrettyPrintModel
 import           Language.Fortran.Vars.Types    ( ProgramFileModel
                                                 , SymbolTableEntry(..)
                                                 , MemoryBlock(..)
+                                                , StorageTable
+                                                , SymbolTable
                                                 )
 import           Language.Fortran.AST           ( ProgramUnitName(..) )
 import           Language.Fortran.Vars.Rep      ( Type
@@ -22,20 +24,22 @@ import           Text.Printf                    ( printf )
 prettyPrintModel :: ProgramFileModel -> String
 prettyPrintModel pfm = unlines $ concatMap formatProgramUnit (M.toList pfm)
   where
+    formatProgramUnit :: (ProgramUnitName, (SymbolTable, StorageTable)) -> [String]
     formatProgramUnit (punName, (symTable, storageTable)) =
       let unitName = showPUN punName
-          unitHeader = "\n" ++ replicate 100 '=' ++ "\n" 
-                    ++ "Program Unit: " ++ unitName ++ "\n"
-                    ++ replicate 100 '='
+          unitHeader = "\n" <> replicate 100 '=' <> "\n" 
+                    <> "Program Unit: " <> unitName <> "\n"
+                    <> replicate 100 '='
           combinedTable = if M.null symTable
                           then "\n(No symbols)"
                           else formatCombinedTable symTable storageTable
       in [unitHeader, combinedTable]
-    
+
+    formatCombinedTable :: SymbolTable -> StorageTable -> String
     formatCombinedTable symTable storageTable = 
-      let tableHeader = "\n\n" ++ combinedHeader ++ "\n" ++ combinedSep
+      let tableHeader = "\n\n" <> combinedSep <> "\n" <> combinedHeader <> "\n" <> combinedSep
           symRows = map (formatSymbol storageTable) (M.toList symTable)
-      in unlines (tableHeader : symRows ++ [combinedSep])
+      in unlines (tableHeader : symRows <> [combinedSep])
     
     -- Column widths for combined table
     nameW = 20
@@ -49,14 +53,15 @@ prettyPrintModel pfm = unlines $ concatMap formatProgramUnit (M.toList pfm)
     combinedHeader = printf "| %-*s | %-*s | %-*s | %-*s | %-*s | %-*s | %-*s |"
       nameW "Name" tagW "Tag" typeW "Type" blockW "Block/Value" offsetW "Offset" sizeW "Size" classW "Class"
     
-    combinedSep = "+" ++ replicate (nameW + 2) '-'
-               ++ "+" ++ replicate (tagW + 2) '-'
-               ++ "+" ++ replicate (typeW + 2) '-'
-               ++ "+" ++ replicate (blockW + 2) '-'
-               ++ "+" ++ replicate (offsetW + 2) '-'
-               ++ "+" ++ replicate (sizeW + 2) '-'
-               ++ "+" ++ replicate (classW + 2) '-' ++ "+"
+    combinedSep = "+" <> replicate (nameW + 2) '-'
+               <> "+" <> replicate (tagW + 2) '-'
+               <> "+" <> replicate (typeW + 2) '-'
+               <> "+" <> replicate (blockW + 2) '-'
+               <> "+" <> replicate (offsetW + 2) '-'
+               <> "+" <> replicate (sizeW + 2) '-'
+               <> "+" <> replicate (classW + 2) '-' <> "+"
     
+    formatSymbol :: M.Map String MemoryBlock -> (String, SymbolTableEntry) -> String
     formatSymbol storageTable (name, entry) = case entry of
       SParameter ty val -> 
         printf "| %-*s | %-*s | %-*s | %-*s | %-*s | %-*s | %-*s |"
@@ -108,7 +113,7 @@ prettyPrintModel pfm = unlines $ concatMap formatProgramUnit (M.toList pfm)
     
     trunc n s 
       | length s <= n = s
-      | otherwise = take (n - 3) s ++ "..."
+      | otherwise = take (n - 3) s <> "..."
     
     showPUN (Named n) = n
     showPUN (NamelessBlockData) = "<anonymous block data>"
