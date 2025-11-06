@@ -44,6 +44,7 @@ library
       Language.Fortran.Vars.Memory
       Language.Fortran.Vars.MemoryLocation
       Language.Fortran.Vars.Orphans
+      Language.Fortran.Vars.PrettyPrintModel
       Language.Fortran.Vars.PureExpression
       Language.Fortran.Vars.Range
       Language.Fortran.Vars.Rep
