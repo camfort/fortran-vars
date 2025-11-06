@@ -31,6 +31,10 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-stack
 
+    # Work around https://github.com/commercialhaskell/stack/issues/5405
+    - name: Clear Hackage security metadata to avoid hash mismatch
+      run: rm -rf ~/.stack/pantry/hackage/hackage-security-lock ~/.stack/pantry/hackage/*.json
+
     - name: Install project dependencies
       run: stack --no-terminal test --only-dependencies
 
