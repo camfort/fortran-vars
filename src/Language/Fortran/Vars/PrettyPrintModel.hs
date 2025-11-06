@@ -10,6 +10,7 @@ import           Language.Fortran.Vars.Types    ( ProgramFileModel
                                                 , StorageTable
                                                 , SymbolTable
                                                 )
+import           Language.Fortran.Vars.Types.SymbolTable ( MemoryBlockName )
 import           Language.Fortran.AST           ( ProgramUnitName(..) )
 import           Language.Fortran.Vars.Rep      ( Type
                                                 , ExpVal(..)
