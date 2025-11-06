@@ -1,3 +1,7 @@
+## 0.4.5 (wip)
+ * Support more fine-grained type checking of array sections (see https://github.com/camfort/fortran-vars/pull/14)
+ * Adds a `--pretty` flag to get an ASCII output of the storage model of a program for easier use.
+
 ## 0.4.0 (22 Jun 2023)
   * Replace expression evaluator with fortran-src one
     * Interface changes are mostly non-breaking. Some behaviour may be slightly

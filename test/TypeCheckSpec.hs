@@ -29,6 +29,7 @@ import           Language.Fortran.Vars.SymbolTable
                                                 ( collectSymbols )
 import           Language.Fortran.Vars.StructureTable
                                                 ( collectStructures )
+import Language.Fortran.Analysis.SemanticTypes (Dims(DimsAssumedSize))
 
 -- | Given a varaible name, 'RHSFunc' search assignment statements within a program
 -- unit and returns the RHS of first assignment statement whose LHS matches the
@@ -183,9 +184,10 @@ spec = do
 
     it "Index ranges" $ do
       (typeof, rhs) <- helper path puName
-      typeof (rhs "i1") `shouldBe` Right (TArray (TInteger 4) (dess1 1 10))
-      typeof (rhs "i2") `shouldBe` Right (TArray (TInteger 4) (dess1 1 10))
-      typeof (rhs "i3") `shouldBe` Right (TArray (TInteger 4) (DimsExplicitShape (Dim (Just 1) Nothing :| [])))
+      typeof (rhs "i1") `shouldBe` Right (TArray (TInteger 4) (dess1 1 3))
+      typeof (rhs "i2") `shouldBe` Right (TArray (TInteger 4) (dess1 1 1))
+      typeof (rhs "i3") `shouldBe` Right (TArray (TInteger 4) (DimsAssumedSize Nothing (Just 3)))
+      typeof (rhs "i4") `shouldBe` Right (TArray (TInteger 2) (dess1 1 6))
 
     it "Erroneous expressions" $ do
       -- These expressions aren't valid but any subscript can be assumed to
