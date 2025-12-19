@@ -18,9 +18,9 @@ type SymbolTable = Map Name SymbolTableEntry
 -- | An entry in the 'SymbolTable' for some variable
 data SymbolTableEntry
   = SParameter { parType :: Type , parVal :: ExpVal }
-  | SVariable { varType :: Type , varLoc :: Location }
-  | SDummy { dumType :: Type }
-  | SExternal {extType :: Type }
+  | SVariable  { varType :: Type , varLoc :: Location }
+  | SDummy     { dumType :: Type }
+  | SExternal  { extType :: Type }
   deriving (Eq, Ord, Show, Data, Generic)
 
 instance FromJSON SymbolTableEntry

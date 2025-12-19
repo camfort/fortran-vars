@@ -41,7 +41,7 @@ Variables and array elements are resolved to range of memory by referencing the 
 command-line tool that dumps the symbol table and storage table of the input program in JSON format.
 
 ```
-fortran-vars (-v|--fortranVersion VERSION) [-I|--include DIRECTORY] FILE
+fortran-vars (-v|--fortranVersion VERSION) [-I|--include DIRECTORY] FILE [--pretty]
 ```
 
 ## Build
