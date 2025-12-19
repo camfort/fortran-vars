@@ -4,6 +4,6 @@ packages:
 save-hackage-creds: false
 
 extra-deps:
-- fortran-src-0.15.0
-- fortran-src-extras-0.5.0
+- fortran-src-0.16.9
+- fortran-src-extras-0.5.5
 - vector-sized-1.5.0 # TODO erroneous dep in fortran-src, removed in 0.15.1

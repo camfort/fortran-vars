@@ -534,7 +534,7 @@ spec = do
 
     let
       errStr t =
-        "The second declaration of 'a' at line (3:19)-(3:19) does not have the same "
+        "The second declaration of 'a' at line (3:18)-(3:18) does not have the same "
           ++ t
           ++ " as the first"
     it "Throws on conflicting types" $ do

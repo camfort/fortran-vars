@@ -26,6 +26,8 @@ import qualified Language.Fortran.Repr as FS
 import qualified Language.Fortran.Repr.Eval.Common as FS.Eval
 import qualified Language.Fortran.Repr.Eval.Value as FS.Eval
 
+import Language.Fortran.Analysis (initAnalysis)
+
 import Control.Monad.Reader
 import Control.Monad.Except
 
@@ -36,7 +38,7 @@ import qualified Data.Map as Map
 --   an 'ExpVal', and return.
 eval' :: SymbolTable -> Expression a -> Either String ExpVal
 eval' symt expr =
-    case ViaFS.runEval symt (FS.Eval.evalExpr expr) of
+    case ViaFS.runEval symt (FS.Eval.evalExpr (initAnalysis expr)) of
       Left err -> Left $ show err
       Right a -> ViaFS.translateFValue a
 
